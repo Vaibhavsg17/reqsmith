@@ -313,7 +313,16 @@ _build/
 # Package manager files
 yarn.lock
 package-lock.json
+pnpm-lock.yaml
 node_modules/
+
+# Docusaurus
+docs-site/.docusaurus/
+docs-site/build/
+docs-site/.env.local
+docs-site/npm-debug.log*
+docs-site/yarn-debug.log*
+docs-site/yarn-error.log*
 
 # Temporary directories
 scratch/

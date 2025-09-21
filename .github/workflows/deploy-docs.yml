@@ -1,0 +1,50 @@
+name: Deploy Documentation
+
+on:
+  push:
+    branches: [ main ]
+    paths: 
+      - 'docs-site/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      working-directory: docs-site
+      run: npm install
+      
+    - name: Index documentation with Algolia
+      working-directory: docs-site
+      run: npm run index-docs
+      env:
+        NODE_ENV: production
+        ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
+        ALGOLIA_ADMIN_API_KEY: ${{ secrets.ALGOLIA_ADMIN_API_KEY }}
+        ALGOLIA_INDEX_NAME: reqsmith
+      
+    - name: Build website
+      working-directory: docs-site
+      run: npm run build
+      env:
+        NODE_ENV: production
+        ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
+        ALGOLIA_SEARCH_API_KEY: ${{ secrets.ALGOLIA_SEARCH_API_KEY }}
+        ALGOLIA_INDEX_NAME: reqsmith
+        
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: docs-site/build
