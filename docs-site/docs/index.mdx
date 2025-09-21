@@ -1,0 +1,170 @@
+---
+title: ReqSmith - API Testing CLI
+description: "A powerful command-line API testing tool with Postman-like functionality, hybrid caching, and optional AI assistance."
+---
+
+# Welcome to ReqSmith
+
+**ReqSmith** is a powerful command-line API testing tool that brings Postman-like functionality directly to your terminal. Test REST and GraphQL APIs with features like templates, environments, history tracking, response caching, and optional AI assistance.
+
+## Why ReqSmith?
+
+### 🖥️ CLI-First Design
+Built for developers who live in the terminal. No GUI required.
+
+### 📋 Template Management
+Save and reuse request configurations with variable substitution
+
+### 🌍 Environment Support
+Manage different configurations for dev, staging, and production
+
+### ⚡ Smart Caching
+Hybrid memory + disk caching for faster repeated requests
+
+## Key Features
+
+- **HTTP/REST API Testing**: Support for GET, POST, PUT, PATCH, DELETE, OPTIONS methods
+- **GraphQL Support**: Native GraphQL query and mutation testing
+- **Template System**: Save and reuse request configurations with variables
+- **Environment Management**: Different variable sets for dev, staging, prod
+- **Request History**: Automatic tracking and replay of previous requests
+- **Smart Caching**: Hybrid memory + disk caching with TTL
+- **Rich Output**: Color-coded responses with JSON/XML formatting
+- **AI Assistance**: Optional Gemini AI integration for suggestions and validation
+- **Cross-Platform**: Works on Windows, macOS, and Linux
+
+## Quick Example
+
+```bash
+# Simple GET request
+reqsmith request get https://api.github.com/users/octocat
+
+# POST request with JSON body
+reqsmith request post https://api.example.com/users \
+  --json '{"name": "John", "email": "john@example.com"}'
+
+# Save request as template
+reqsmith template save github-user \
+  --method GET \
+  --url "https://api.github.com/users/${USERNAME}" \
+  --description "Get GitHub user info"
+
+# Use template with variables
+reqsmith template use github-user --var USERNAME=octocat
+```
+
+## Getting Started
+
+- **[📥 Installation](/installation)** - Install ReqSmith via pip or from source
+- **[🚀 Quick Start](/quickstart)** - Make your first API request in minutes  
+- **[⚙️ Configuration](/configuration)** - Configure ReqSmith for your workflow
+
+## Next Steps
+
+- Learn about [core concepts](/concepts/requests) to understand how ReqSmith works
+- Explore [CLI commands](/cli) for detailed command reference
+- Check out [examples](/examples/basic-requests) for common usage patterns
+- Set up [AI features](/concepts/ai-features) for enhanced testing capabilities
+
+Modern API testing often involves complex workflows:
+- **Multiple Environments**: Development, staging, production endpoints
+- **Authentication**: Various auth methods (Bearer tokens, API keys, OAuth)
+- **Data Validation**: Checking response formats and status codes
+- **Performance Testing**: Monitoring response times and caching
+
+Managing these testing scenarios manually is complex and time-consuming:
+
+**Traditional Way (Without ReqSmith):**
+```bash
+# Manual curl requests
+curl -X GET https://api.github.com/users/octocat \
+  -H "Accept: application/json"
+
+# Complex POST with authentication
+curl -X POST https://api.example.com/users \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer token" \
+  -d '{"name": "John", "email": "john@example.com"}'
+```
+
+**The ReqSmith Way:**
+```bash
+# Simple and clean
+reqsmith request get https://api.github.com/users/octocat
+reqsmith request post https://api.example.com/users --json '{"name": "John", "email": "john@example.com"}'
+```
+
+## Quick Start
+
+Get up and running with PPM in under 2 minutes:
+
+### Step 1: Install ReqSmith
+```bash
+pip install reqsmith
+```
+
+### Step 2: Make Your First Request
+```bash
+reqsmith request get https://api.github.com/users/octocat
+```
+
+### Step 3: Save as Template
+```bash
+reqsmith template save github-user \
+  --method GET \
+  --url "https://api.github.com/users/${USERNAME}"
+```
+
+### Step 4: Use Template with Variables
+```bash
+reqsmith template use github-user --var USERNAME=octocat
+```
+
+## Key Features
+
+### 🎯 **Template-Based Testing**
+Save request configurations as reusable templates:
+
+```bash
+# Save a template
+reqsmith template save api-health \
+  --method GET \
+  --url "${BASE_URL}/health" \
+  --header "Authorization: Bearer ${TOKEN}"
+
+# Use across environments
+reqsmith template use api-health \
+  --var BASE_URL=https://api.prod.com \
+  --var TOKEN=prod-token
+```
+
+### 🚀 **Productivity Boost**
+- **Instant request replay** from history
+- **Environment switching** in seconds
+- **Template sharing** across teams
+
+### 🔒 **Enterprise Ready**
+- Secure credential management
+- Request/response logging
+- CI/CD integration capabilities
+
+## Real-World Impact
+
+| Benefit | Description |
+|---------|-------------|
+| **Developer Productivity** | Save hours per week on API testing and debugging |
+| **Team Collaboration** | Share templates and environments across teams |
+| **Testing Efficiency** | Automated caching and history for faster iterations |
+
+## What's Next?
+
+- **[📥 Installation Guide](/installation)** - Get ReqSmith installed on your system
+- **[🚀 Quick Start Tutorial](/quickstart)** - Make your first API request in minutes
+- **[⚙️ Configuration Guide](/configuration)** - Learn about ReqSmith configuration
+- **[💡 See Examples](/examples/basic-requests)** - Explore real-world usage examples
+
+---
+
+:::info
+ReqSmith is open source and actively maintained. Join our community on [GitHub](https://github.com/VesperAkshay/reqsmith) to contribute, report issues, or request features.
+:::

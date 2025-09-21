@@ -1,0 +1,361 @@
+---
+title: Configuration
+description: "Configure ReqSmith for your workflow"
+---
+
+# Configuration
+
+ReqSmith provides extensive configuration options to customize its behavior for your specific needs.
+
+## Configuration File
+
+ReqSmith stores its configuration in a JSON file located at:
+
+- **Windows**: `%USERPROFILE%\.reqsmith\config.json`
+- **macOS/Linux**: `~/.reqsmith/config.json`
+
+The configuration file is created automatically on first run with default values.
+
+## View Current Configuration
+
+To see your current configuration:
+
+```bash
+# Show all configuration
+reqsmith config show
+
+# Show specific section
+reqsmith config show --section network
+
+# Show in different format
+reqsmith config show --format json
+reqsmith config show --format yaml
+```
+
+## Configuration Sections
+
+### Network Settings
+
+Control network behavior:
+
+```bash
+# Request timeout (seconds)
+reqsmith config set network.timeout_seconds 30
+
+# Maximum redirects to follow
+reqsmith config set network.max_redirects 5
+
+# SSL verification
+reqsmith config set network.verify_ssl true
+
+# User agent string
+reqsmith config set network.user_agent "ReqSmith/1.0.0"
+```
+
+### Output Settings
+
+Customize response display:
+
+```bash
+# Default output format
+reqsmith config set output.default_format json  # json, table, raw, auto
+
+# Color output
+reqsmith config set output.color true
+
+# Maximum response body size to display (bytes)
+reqsmith config set output.max_body_size 10240
+
+# Show response headers
+reqsmith config set output.show_headers true
+```
+
+### Cache Settings
+
+Configure response caching:
+
+```bash
+# Enable caching
+reqsmith config set cache.enabled true
+
+# Memory cache size (MB)
+reqsmith config set cache.memory_size_mb 50
+
+# Disk cache size (MB) 
+reqsmith config set cache.disk_size_mb 200
+
+# Default TTL (seconds)
+reqsmith config set cache.default_ttl_seconds 300
+```
+
+### Storage Settings
+
+Control data storage:
+
+```bash
+# Maximum history entries
+reqsmith config set storage.max_history_entries 1000
+
+# Maximum template count
+reqsmith config set storage.max_templates 500
+
+# Cleanup interval (days)
+reqsmith config set storage.cleanup_interval_days 30
+```
+
+### AI Settings
+
+Configure AI features:
+
+```bash
+# Enable AI features
+reqsmith config set ai.enabled true
+
+# Gemini API key
+reqsmith config set ai.gemini_api_key "your-api-key-here"
+
+# AI model to use
+reqsmith config set ai.model "gemini-pro"
+
+# AI timeout (seconds)
+reqsmith config set ai.timeout_seconds 10
+```
+
+### Debug Settings
+
+Control logging and debugging:
+
+```bash
+# Enable debug mode
+reqsmith config set debug.enabled false
+
+# Log level
+reqsmith config set debug.log_level "INFO"  # DEBUG, INFO, WARNING, ERROR
+
+# Log file path
+reqsmith config set debug.log_file_path "~/.reqsmith/logs/reqsmith.log"
+```
+
+## Environment Variables
+
+You can override any configuration setting using environment variables. The format is `REQSMITH_<SECTION>_<KEY>`:
+
+```bash
+# Network settings
+export REQSMITH_NETWORK_TIMEOUT_SECONDS=60
+export REQSMITH_NETWORK_VERIFY_SSL=false
+
+# Output settings
+export REQSMITH_OUTPUT_DEFAULT_FORMAT=table
+export REQSMITH_OUTPUT_COLOR=true
+
+# Cache settings
+export REQSMITH_CACHE_ENABLED=true
+export REQSMITH_CACHE_MEMORY_SIZE_MB=100
+
+# AI settings
+export REQSMITH_AI_ENABLED=true
+export REQSMITH_GEMINI_API_KEY="your-api-key"
+
+# Debug settings
+export REQSMITH_DEBUG_ENABLED=true
+export REQSMITH_DEBUG_LOG_LEVEL=DEBUG
+```
+
+View all available environment variables:
+
+```bash
+reqsmith config env
+```
+
+## Configuration Management
+
+### Reset Configuration
+
+Reset configuration to defaults:
+
+```bash
+# Reset all settings
+reqsmith config reset
+
+# Reset specific section
+reqsmith config reset --section cache
+
+# Reset with confirmation
+reqsmith config reset --yes
+```
+
+### Import/Export Configuration
+
+Share configuration between systems:
+
+```bash
+# Export configuration
+reqsmith config export config-backup.json
+
+# Export specific section
+reqsmith config export cache-settings.json --section cache
+
+# Import configuration
+reqsmith config import config-backup.json
+
+# Merge with existing configuration
+reqsmith config import config-backup.json --merge
+```
+
+### Validate Configuration
+
+Check configuration for errors:
+
+```bash
+reqsmith config validate
+```
+
+## Configuration Examples
+
+### Development Setup
+
+```bash
+# Fast development configuration
+reqsmith config set network.timeout_seconds 10
+reqsmith config set cache.enabled true
+reqsmith config set cache.default_ttl_seconds 60
+reqsmith config set output.default_format table
+reqsmith config set debug.enabled true
+```
+
+### Production Testing
+
+```bash
+# Production-ready configuration
+reqsmith config set network.timeout_seconds 60
+reqsmith config set network.max_redirects 3
+reqsmith config set cache.enabled true
+reqsmith config set cache.default_ttl_seconds 300
+reqsmith config set output.show_headers true
+reqsmith config set debug.enabled false
+```
+
+### CI/CD Integration
+
+```bash
+# Minimal configuration for CI/CD
+reqsmith config set output.color false
+reqsmith config set output.default_format json
+reqsmith config set cache.enabled false
+reqsmith config set debug.enabled false
+```
+
+## Per-Project Configuration
+
+For project-specific settings, create a `.reqsmith.json` file in your project directory:
+
+```json
+{
+  "network": {
+    "timeout_seconds": 30
+  },
+  "output": {
+    "default_format": "table"
+  },
+  "environments": {
+    "default": "development"
+  }
+}
+```
+
+ReqSmith will automatically load this configuration when run from the project directory.
+
+## Configuration Schema
+
+The complete configuration schema:
+
+```json
+{
+  "network": {
+    "timeout_seconds": 30,
+    "max_redirects": 5,
+    "verify_ssl": true,
+    "user_agent": "ReqSmith/1.0.0",
+    "follow_redirects": true
+  },
+  "output": {
+    "default_format": "json",
+    "color": true,
+    "max_body_size": 10240,
+    "show_headers": true,
+    "show_request_time": true,
+    "show_response_size": true
+  },
+  "cache": {
+    "enabled": true,
+    "memory_size_mb": 50,
+    "disk_size_mb": 200,
+    "default_ttl_seconds": 300
+  },
+  "storage": {
+    "max_history_entries": 1000,
+    "max_templates": 500,
+    "cleanup_interval_days": 30,
+    "auto_backup": true
+  },
+  "ai": {
+    "enabled": false,
+    "gemini_api_key": null,
+    "model": "gemini-pro",
+    "timeout_seconds": 10
+  },
+  "debug": {
+    "enabled": false,
+    "log_level": "INFO",
+    "log_file_path": "~/.reqsmith/logs/reqsmith.log"
+  }
+}
+```
+
+## Troubleshooting Configuration
+
+### Common Issues
+
+1. **Configuration not loading**: Check file permissions and JSON syntax
+2. **Environment variables not working**: Ensure correct variable names and values
+3. **AI features not working**: Verify API key is set and valid
+
+### Configuration File Location
+
+Find your configuration file:
+
+```bash
+reqsmith config path
+```
+
+### Reset Corrupted Configuration
+
+If your configuration file is corrupted:
+
+```bash
+# Backup current config
+cp ~/.reqsmith/config.json ~/.reqsmith/config.json.backup
+
+# Reset to defaults
+reqsmith config reset --yes
+
+# Restore specific settings
+reqsmith config set network.timeout_seconds 60
+```
+
+## Best Practices
+
+1. **Use environment variables** for sensitive data like API keys
+2. **Export configuration** before making major changes
+3. **Use per-project configs** for team collaboration
+4. **Enable caching** for better performance
+5. **Set appropriate timeouts** for your network conditions
+6. **Use table format** for better readability during development
+
+## Next Steps
+
+- Learn about [Request Management](/concepts/requests)
+- Explore [Template System](/concepts/templates)  
+- Set up [Environment Variables](/concepts/environments)
+- Configure [AI Features](/concepts/ai-features)

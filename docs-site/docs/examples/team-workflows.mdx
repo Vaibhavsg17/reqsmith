@@ -1,0 +1,687 @@
+---
+title: Team Workflows
+description: "Collaborative workflows and team-based API development with ReqSmith"
+---
+
+# Team Workflows
+
+This page covers collaborative workflows and team-based API development practices using ReqSmith's sharing and collaboration features.
+
+## Shared Templates and Environments
+
+### Team Template Repository
+
+```bash
+# Set up shared template repository
+mkdir -p team-templates
+cd team-templates
+
+# Create team-specific templates
+reqsmith template create auth-flow --shared
+reqsmith template create user-crud --shared
+reqsmith template create payment-flow --shared
+
+# Version control templates
+git init
+git add .
+git commit -m "Initial team templates"
+git remote add origin https://github.com/company/api-templates.git
+git push -u origin main
+```
+
+### Environment Synchronization
+
+```bash
+# Export production environment for team sharing
+reqsmith env export production prod-env.yaml --sanitize
+
+# Share development environment
+reqsmith env export development dev-env.yaml
+
+# Team members import environments
+reqsmith env import dev-env.yaml
+reqsmith env import prod-env.yaml --name production-readonly
+```
+
+## Code Review Workflows
+
+### API Request Review Process
+
+```bash
+# Create feature branch for API changes
+git checkout -b feature/new-user-endpoints
+
+# Document new API requests as templates
+reqsmith template create user-registration \
+  --description "New user registration endpoint" \
+  --tags "feature,user-management"
+
+# Add test cases
+reqsmith template create user-registration-tests \
+  --description "Test cases for user registration"
+
+# Commit templates for review
+git add templates/
+git commit -m "Add user registration API templates"
+git push origin feature/new-user-endpoints
+
+# Create pull request with API documentation
+```
+
+### Template Validation in CI/CD
+
+```yaml
+# .github/workflows/api-validation.yml
+name: API Template Validation
+
+on:
+  pull_request:
+    paths:
+      - 'templates/**'
+      - 'environments/**'
+
+jobs:
+  validate-templates:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install ReqSmith
+      run: pip install reqsmith
+      
+    - name: Validate templates
+      run: |
+        for template in templates/*.yaml; do
+          echo "Validating $template"
+          reqsmith template validate "$template"
+        done
+        
+    - name: Test against staging
+      env:
+        STAGING_API_TOKEN: ${{ secrets.STAGING_API_TOKEN }}
+      run: |
+        reqsmith env create ci-staging
+        reqsmith env set ci-staging API_TOKEN "$STAGING_API_TOKEN"
+        reqsmith env use ci-staging
+        
+        # Run template tests
+        reqsmith template test user-registration --env ci-staging
+        reqsmith template test user-crud --env ci-staging
+```
+
+## Shared Configuration Management
+
+### Team Configuration Standards
+
+```yaml
+# team-config.yaml
+# Shared team configuration standards
+
+network:
+  timeout: 30000
+  retry_attempts: 3
+  retry_delay: 1000
+
+cache:
+  enabled: true
+  default_ttl: 3600
+
+output:
+  format: json
+  pretty: true
+  color: auto
+
+history:
+  enabled: true
+  max_entries: 10000
+  exclude_headers: ["Authorization", "X-API-Key"]
+
+templates:
+  search_paths: 
+    - "./templates"
+    - "~/.reqsmith/team-templates"
+    - "~/company/api-templates"
+```
+
+```bash
+# Apply team configuration
+reqsmith config import team-config.yaml --profile team-defaults
+
+# Each team member uses team defaults
+reqsmith config profile use team-defaults
+```
+
+### Environment Standardization
+
+```bash
+# Create standardized environments for all team members
+reqsmith env create development
+reqsmith env set development API_BASE_URL "https://api-dev.company.com"
+reqsmith env set development API_VERSION "v1"
+reqsmith env set development TIMEOUT "10000"
+
+reqsmith env create staging  
+reqsmith env set staging API_BASE_URL "https://api-staging.company.com"
+reqsmith env set staging API_VERSION "v1"
+reqsmith env set staging TIMEOUT "15000"
+
+reqsmith env create production
+reqsmith env set production API_BASE_URL "https://api.company.com"
+reqsmith env set production API_VERSION "v1"
+reqsmith env set production TIMEOUT "30000"
+reqsmith env set production REQUIRE_CONFIRMATION "true"
+
+# Export for team sharing
+reqsmith env export-all team-environments.yaml --sanitize
+```
+
+## Collaborative Testing
+
+### Team Testing Suites
+
+```bash
+# Create comprehensive test suite
+mkdir -p tests/api-tests
+
+# User management tests
+cat > tests/api-tests/user-tests.yaml << 'EOF'
+name: user-management-tests
+description: Comprehensive user management API tests
+
+tests:
+  - name: create-user
+    template: user-registration
+    expect:
+      status: 201
+      json:
+        id: "exists"
+        email: "{{input.email}}"
+    
+  - name: get-user
+    template: get-user
+    variables:
+      user_id: "{{create-user.response.id}}"
+    expect:
+      status: 200
+      
+  - name: update-user
+    template: update-user
+    variables:
+      user_id: "{{create-user.response.id}}"
+    expect:
+      status: 200
+      
+  - name: delete-user
+    template: delete-user
+    variables:
+      user_id: "{{create-user.response.id}}"
+    expect:
+      status: 204
+EOF
+
+# Payment flow tests
+cat > tests/api-tests/payment-tests.yaml << 'EOF'
+name: payment-flow-tests
+description: Payment processing API tests
+
+setup:
+  - template: create-test-user
+    save_as: test_user
+    
+tests:
+  - name: create-payment-method
+    template: add-payment-method
+    variables:
+      user_id: "{{test_user.id}}"
+    expect:
+      status: 201
+      
+  - name: process-payment
+    template: process-payment
+    variables:
+      user_id: "{{test_user.id}}"
+      payment_method_id: "{{create-payment-method.response.id}}"
+      amount: 1000
+    expect:
+      status: 200
+      json:
+        status: "succeeded"
+        
+cleanup:
+  - template: delete-user
+    variables:
+      user_id: "{{test_user.id}}"
+EOF
+```
+
+### Parallel Team Testing
+
+```bash
+# Run tests in parallel across team
+team_parallel_test() {
+  local test_suite=$1
+  local environment=$2
+  
+  # Distribute tests across team members
+  TEAM_MEMBERS=("alice" "bob" "charlie" "diana")
+  TOTAL_TESTS=$(reqsmith template list-tests "$test_suite" --count)
+  TESTS_PER_MEMBER=$((TOTAL_TESTS / ${#TEAM_MEMBERS[@]}))
+  
+  for i in "${!TEAM_MEMBERS[@]}"; do
+    MEMBER=${TEAM_MEMBERS[$i]}
+    START_INDEX=$((i * TESTS_PER_MEMBER))
+    END_INDEX=$(((i + 1) * TESTS_PER_MEMBER))
+    
+    echo "Assigning tests $START_INDEX-$END_INDEX to $MEMBER"
+    
+    # Each member runs their subset
+    reqsmith template test "$test_suite" \
+      --env "$environment" \
+      --range "$START_INDEX:$END_INDEX" \
+      --reporter junit \
+      --output "results-$MEMBER.xml" &
+  done
+  
+  # Wait for all tests to complete
+  wait
+  
+  # Merge results
+  reqsmith test merge-results results-*.xml --output final-results.xml
+}
+
+# Run team parallel testing
+team_parallel_test "api-regression-suite" "staging"
+```
+
+## Documentation Collaboration
+
+### API Documentation Generation
+
+```bash
+# Generate API documentation from templates
+reqsmith docs generate \
+  --templates ./templates \
+  --environments ./environments \
+  --output ./api-docs \
+  --format markdown
+
+# Create OpenAPI specification from templates
+reqsmith docs openapi \
+  --templates ./templates \
+  --base-url "{{env.API_BASE_URL}}" \
+  --output openapi.yaml
+
+# Generate Postman collection for team sharing
+reqsmith docs postman \
+  --templates ./templates \
+  --environments ./environments \
+  --output team-collection.json
+```
+
+### Living Documentation
+
+```bash
+# Auto-update documentation on API changes
+cat > .github/workflows/update-docs.yml << 'EOF'
+name: Update API Documentation
+
+on:
+  push:
+    paths:
+      - 'templates/**'
+      - 'environments/**'
+
+jobs:
+  update-docs:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Generate documentation
+      run: |
+        reqsmith docs generate \
+          --templates ./templates \
+          --output ./docs/api
+          
+        reqsmith docs openapi \
+          --templates ./templates \
+          --output ./docs/openapi.yaml
+          
+    - name: Commit documentation updates
+      run: |
+        git config --local user.email "bot@company.com"
+        git config --local user.name "API Docs Bot"
+        git add docs/
+        git commit -m "Auto-update API documentation" || exit 0
+        git push
+EOF
+```
+
+## Team Onboarding
+
+### New Team Member Setup
+
+```bash
+# Onboarding script for new team members
+#!/bin/bash
+# setup-new-team-member.sh
+
+echo "🚀 Setting up ReqSmith for team development"
+
+# Install ReqSmith
+pip install reqsmith
+
+# Clone team templates and environments
+git clone https://github.com/company/api-templates.git ~/.reqsmith/team-templates
+
+# Import team configuration
+reqsmith config import ~/.reqsmith/team-templates/team-config.yaml
+
+# Set up environments
+reqsmith env import ~/.reqsmith/team-templates/environments.yaml
+
+# Set up development environment with personal API key
+echo "Please enter your development API key:"
+read -s DEV_API_KEY
+reqsmith env set development API_KEY "$DEV_API_KEY" --encrypt
+
+# Verify setup
+reqsmith template test basic-health-check --env development
+
+echo "✅ Setup complete! You're ready to collaborate."
+echo ""
+echo "Next steps:"
+echo "1. Run 'reqsmith env list' to see available environments"
+echo "2. Run 'reqsmith template list' to see team templates"
+echo "3. Check team documentation at: https://docs.company.com/api"
+```
+
+### Knowledge Sharing
+
+```bash
+# Create team knowledge base from API history
+reqsmith history export \
+  --format markdown \
+  --include-examples \
+  --output team-api-patterns.md \
+  --filter "status:200" \
+  --since "30d"
+
+# Share common API patterns
+reqsmith template create-from-history \
+  --pattern "authentication" \
+  --output auth-patterns.yaml
+
+# Document API quirks and gotchas
+cat > api-gotchas.md << 'EOF'
+# API Gotchas and Team Knowledge
+
+## Authentication
+- Tokens expire after 1 hour, implement refresh logic
+- Staging uses different OAuth scopes than production
+
+## Rate Limiting
+- User API: 100 requests/minute per token
+- Payment API: 10 requests/minute per token
+- Use exponential backoff for retries
+
+## Data Formats
+- Dates are in ISO 8601 format with timezone
+- Currency amounts are in cents (integer)
+- Empty arrays vs null fields have different meanings
+EOF
+```
+
+## Performance Testing Coordination
+
+### Load Testing Coordination
+
+```bash
+# Coordinate load testing across team
+coordinate_load_test() {
+  local target_endpoint=$1
+  local total_requests=$2
+  local team_size=$3
+  
+  requests_per_member=$((total_requests / team_size))
+  
+  echo "🎯 Coordinating load test:"
+  echo "  Target: $target_endpoint"
+  echo "  Total requests: $total_requests"
+  echo "  Requests per team member: $requests_per_member"
+  echo ""
+  
+  # Generate load test script for each team member
+  for i in $(seq 1 $team_size); do
+    cat > "load-test-member-$i.sh" << EOF
+#!/bin/bash
+echo "Team member $i starting load test..."
+
+for j in \$(seq 1 $requests_per_member); do
+  reqsmith get "$target_endpoint" \\
+    --header "X-Load-Test-Member: $i" \\
+    --header "X-Load-Test-Request: \$j" \\
+    --timeout 5000 \\
+    --silent &
+    
+  # Small delay to spread requests
+  sleep 0.1
+done
+
+wait
+echo "Team member $i completed load test"
+EOF
+    chmod +x "load-test-member-$i.sh"
+  done
+  
+  echo "📋 Load test scripts generated!"
+  echo "Each team member should run their script: ./load-test-member-N.sh"
+}
+
+# Usage
+coordinate_load_test "https://api.company.com/users" 1000 5
+```
+
+### Performance Monitoring
+
+```bash
+# Team performance monitoring dashboard
+create_performance_dashboard() {
+  # Collect performance data from all team members
+  reqsmith history export \
+    --format json \
+    --include-timing \
+    --filter "timing.total:>1000" \
+    --since "24h" \
+    --output slow-requests.json
+    
+  # Generate performance report
+  cat slow-requests.json | jq -r '
+    .requests[] | 
+    [.timestamp, .url, .timing.total, .team_member] | 
+    @csv
+  ' > performance-report.csv
+  
+  # Send to team dashboard
+  reqsmith post https://dashboard.company.com/api/performance \
+    --file data=@performance-report.csv \
+    --header "Authorization: Bearer $DASHBOARD_TOKEN"
+}
+
+# Run daily performance monitoring
+create_performance_dashboard
+```
+
+## Incident Response
+
+### API Incident Response Workflow
+
+```bash
+# API incident response playbook
+incident_response() {
+  local incident_id=$1
+  local api_service=$2
+  
+  echo "🚨 API Incident Response: $incident_id"
+  echo "Service: $api_service"
+  echo "Time: $(date)"
+  echo ""
+  
+  # Step 1: Quick health check
+  echo "1. Health check..."
+  health_status=$(reqsmith get "https://api.company.com/health" --status-only)
+  echo "   API Health: $health_status"
+  
+  # Step 2: Check recent errors
+  echo "2. Recent error analysis..."
+  reqsmith history search \
+    --filter "status:>=400" \
+    --since "1h" \
+    --format table \
+    --output incident-errors.txt
+    
+  # Step 3: Test critical endpoints
+  echo "3. Testing critical endpoints..."
+  for endpoint in "/users" "/auth" "/payments"; do
+    status=$(reqsmith get "https://api.company.com$endpoint" --status-only)
+    echo "   $endpoint: $status"
+  done
+  
+  # Step 4: Generate incident report
+  cat > "incident-$incident_id-report.md" << EOF
+# Incident Report: $incident_id
+
+**Service:** $api_service
+**Time:** $(date)
+**Reported by:** $(whoami)
+
+## Quick Assessment
+- API Health Status: $health_status
+- Error Rate (last hour): $(wc -l < incident-errors.txt) errors
+
+## Critical Endpoints Status
+$(reqsmith template run endpoint-health-check --env production)
+
+## Recent Error Log
+\`\`\`
+$(head -20 incident-errors.txt)
+\`\`\`
+
+## Next Steps
+- [ ] Investigate root cause
+- [ ] Implement fix
+- [ ] Verify resolution
+- [ ] Update monitoring
+EOF
+  
+  echo "📋 Incident report generated: incident-$incident_id-report.md"
+  
+  # Step 5: Notify team
+  reqsmith post "$SLACK_INCIDENT_WEBHOOK" \
+    --data "{
+      \"text\": \"🚨 API Incident $incident_id\",
+      \"attachments\": [{
+        \"color\": \"danger\",
+        \"fields\": [{
+          \"title\": \"Service\",
+          \"value\": \"$api_service\",
+          \"short\": true
+        }, {
+          \"title\": \"Health Status\",
+          \"value\": \"$health_status\",
+          \"short\": true
+        }]
+      }]
+    }"
+}
+
+# Usage during incident
+incident_response "INC-2024-001" "user-api"
+```
+
+## Best Practices for Team Collaboration
+
+### 1. Template Organization
+
+```bash
+# Organize templates by domain and ownership
+templates/
+├── auth/           # Authentication templates
+├── users/          # User management templates  
+├── payments/       # Payment processing templates
+├── common/         # Shared utility templates
+└── deprecated/     # Old templates (kept for reference)
+
+# Use consistent naming
+reqsmith template create user-create-v2 --tags "users,crud,v2"
+reqsmith template create payment-process-stripe --tags "payments,stripe"
+```
+
+### 2. Environment Management
+
+```bash
+# Use environment inheritance
+reqsmith env create base
+reqsmith env set base API_VERSION "v1"
+reqsmith env set base TIMEOUT "30000"
+
+reqsmith env create development --inherit base
+reqsmith env set development API_BASE_URL "https://api-dev.company.com"
+
+reqsmith env create production --inherit base
+reqsmith env set production API_BASE_URL "https://api.company.com"
+reqsmith env set production REQUIRE_CONFIRMATION "true"
+```
+
+### 3. Version Control Integration
+
+```bash
+# Use git hooks for template validation
+cat > .git/hooks/pre-commit << 'EOF'
+#!/bin/bash
+# Validate templates before commit
+
+for template in $(git diff --cached --name-only | grep "templates/.*\.yaml$"); do
+  echo "Validating $template"
+  reqsmith template validate "$template" || exit 1
+done
+
+echo "✅ All templates validated"
+EOF
+
+chmod +x .git/hooks/pre-commit
+```
+
+### 4. Documentation Standards
+
+```bash
+# Template documentation standards
+cat > template-standards.md << 'EOF'
+# Template Documentation Standards
+
+## Required Fields
+- name: Clear, descriptive name
+- description: Purpose and usage
+- tags: Domain, type, version
+- variables: All required variables with descriptions
+- examples: At least one usage example
+
+## Naming Convention
+- Use kebab-case: user-create, payment-process
+- Include version for breaking changes: user-create-v2
+- Be specific: github-create-issue, not create-issue
+
+## Testing Requirements
+- Include test cases in template
+- Verify against staging before merging
+- Document expected responses
+EOF
+```
+
+## Next Steps
+
+- Explore [Real-World APIs](/examples/real-world-apis) for practical implementation examples
+- Learn about [Advanced Scenarios](/examples/advanced-scenarios) for complex team workflows
+- Check out [Integration Examples](/examples/integrations) for team collaboration with external services

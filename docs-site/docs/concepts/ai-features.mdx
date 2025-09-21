@@ -1,0 +1,604 @@
+---
+title: AI Features
+description: "Leverage AI assistance in ReqSmith for intelligent API testing and request optimization"
+---
+
+# AI Features
+
+ReqSmith integrates AI capabilities to enhance your API testing experience with intelligent suggestions, request optimization, and automated analysis. Currently powered by Google's Gemini AI, these features help you work more efficiently and catch potential issues early.
+
+## Overview
+
+ReqSmith's AI features include:
+- **Request suggestions**: AI-powered recommendations for API endpoints
+- **Response analysis**: Intelligent analysis of API responses
+- **Error diagnosis**: AI assistance with debugging failed requests
+- **Template optimization**: Suggestions for improving request templates
+- **Pattern recognition**: Identify common API usage patterns
+- **Documentation generation**: Auto-generate API documentation from requests
+
+## Setup and Configuration
+
+### Enable AI Features
+
+AI features are optional and require configuration:
+
+```bash
+# Check if AI is available
+reqsmith ai status
+
+# Configure Gemini API key
+reqsmith config set ai.gemini_api_key "your-api-key-here"
+
+# Enable AI features
+reqsmith config set ai.enabled true
+
+# Set AI provider (currently only Gemini supported)
+reqsmith config set ai.provider "gemini"
+```
+
+### API Key Setup
+
+Get your Gemini API key:
+
+1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Create a new API key
+3. Configure ReqSmith:
+
+```bash
+# Set API key directly
+reqsmith config set ai.gemini_api_key "your-api-key"
+
+# Or use environment variable
+export GEMINI_API_KEY="your-api-key"
+
+# Or store in .env file
+echo "GEMINI_API_KEY=your-api-key" >> .env
+```
+
+### AI Configuration Options
+
+Customize AI behavior:
+
+```bash
+# Set AI model (default: gemini-pro)
+reqsmith config set ai.model "gemini-pro"
+
+# Set creativity level (0.0-1.0, default: 0.3)
+reqsmith config set ai.temperature 0.3
+
+# Set response length preference
+reqsmith config set ai.max_output_tokens 1024
+
+# Enable/disable specific AI features
+reqsmith config set ai.suggestions_enabled true
+reqsmith config set ai.analysis_enabled true
+reqsmith config set ai.documentation_enabled true
+```
+
+## Request Suggestions
+
+### Getting Suggestions
+
+AI can suggest API endpoints and request improvements:
+
+```bash
+# Get suggestions for a URL pattern
+reqsmith ai suggest "https://api.github.com"
+
+# Get suggestions for specific functionality
+reqsmith ai suggest --describe "get user repositories"
+
+# Get suggestions for a specific API
+reqsmith ai suggest --api "GitHub REST API" --action "list issues"
+```
+
+### Contextual Suggestions
+
+AI provides context-aware suggestions:
+
+```bash
+# Suggest based on current environment
+reqsmith ai suggest --env production --describe "health check"
+
+# Suggest based on previous requests
+reqsmith ai suggest --from-history --pattern "user management"
+
+# Suggest improvements for existing template
+reqsmith ai suggest --template github-user --improve
+```
+
+### Example Suggestions
+
+```bash
+$ reqsmith ai suggest "https://api.github.com"
+
+🤖 AI Suggestions for GitHub API:
+
+1. GET /user - Get authenticated user
+2. GET /users/{username} - Get specific user
+3. GET /user/repos - List user repositories
+4. GET /repos/{owner}/{repo} - Get repository details
+5. GET /repos/{owner}/{repo}/issues - List repository issues
+
+Would you like me to create templates for any of these endpoints?
+```
+
+## Response Analysis
+
+### Automatic Analysis
+
+AI automatically analyzes API responses:
+
+```bash
+# Make request with AI analysis
+reqsmith get https://api.github.com/users/octocat --analyze
+
+# Analyze specific response aspects
+reqsmith get https://api.example.com/data --analyze-performance
+reqsmith get https://api.example.com/data --analyze-structure
+reqsmith get https://api.example.com/data --analyze-security
+```
+
+### Analysis Types
+
+Different types of AI analysis:
+
+#### Performance Analysis
+```bash
+# Analyze response time and size
+reqsmith ai analyze-performance --request-id 12345
+
+# Example output:
+# ⚡ Performance Analysis:
+# - Response time: 245ms (Good)
+# - Payload size: 2.3KB (Optimal)
+# - Recommendation: Consider caching for repeated requests
+```
+
+#### Structure Analysis
+```bash
+# Analyze response structure and schema
+reqsmith ai analyze-structure --request-id 12345
+
+# Example output:
+# 📋 Structure Analysis:
+# - Response format: JSON
+# - Schema: Well-formed with consistent field types
+# - Pagination: Uses 'next' and 'previous' links
+# - Recommendation: Response follows REST best practices
+```
+
+#### Security Analysis
+```bash
+# Analyze security aspects
+reqsmith ai analyze-security --request-id 12345
+
+# Example output:
+# 🔒 Security Analysis:
+# - Headers: Missing security headers (X-Frame-Options)
+# - Authentication: Bearer token properly implemented
+# - Data exposure: No sensitive data in response
+# - Recommendation: Add security headers for production
+```
+
+## Error Diagnosis
+
+### AI-Powered Debugging
+
+Get AI assistance for failed requests:
+
+```bash
+# Analyze last failed request
+reqsmith ai diagnose --last-error
+
+# Diagnose specific error
+reqsmith ai diagnose --request-id 12345
+
+# Diagnose with additional context
+reqsmith ai diagnose --request-id 12345 --include-logs
+```
+
+### Error Analysis Examples
+
+```bash
+$ reqsmith ai diagnose --last-error
+
+🔍 Error Diagnosis:
+
+Request: POST https://api.example.com/users
+Status: 422 Unprocessable Entity
+Error: Validation failed
+
+🤖 AI Analysis:
+The request failed due to validation errors. Common causes:
+1. Missing required fields in request body
+2. Invalid data format (expected email format)
+3. Duplicate username constraint violation
+
+💡 Suggested fixes:
+1. Check required fields: name, email, username
+2. Validate email format before sending
+3. Use unique username or check availability first
+
+Would you like me to create a corrected template?
+```
+
+## Template Optimization
+
+### AI Template Improvements
+
+Get suggestions for improving templates:
+
+```bash
+# Analyze template for improvements
+reqsmith ai optimize-template github-user
+
+# Get specific optimization suggestions
+reqsmith ai optimize-template github-user --focus error-handling
+reqsmith ai optimize-template github-user --focus performance
+reqsmith ai optimize-template github-user --focus security
+```
+
+### Template Generation
+
+AI can generate templates from descriptions:
+
+```bash
+# Generate template from description
+reqsmith ai create-template \
+  --name "user-crud" \
+  --description "Complete CRUD operations for user management"
+
+# Generate from example API documentation
+reqsmith ai create-template \
+  --from-docs "https://docs.example.com/api" \
+  --endpoints "users"
+```
+
+### Template Analysis
+
+Analyze existing templates:
+
+```bash
+# Analyze template completeness
+reqsmith ai analyze-template user-management
+
+# Check template best practices
+reqsmith ai check-template user-management --best-practices
+
+# Suggest template variables
+reqsmith ai suggest-variables user-management
+```
+
+## Pattern Recognition
+
+### Usage Pattern Analysis
+
+AI identifies patterns in your API usage:
+
+```bash
+# Analyze request patterns
+reqsmith ai analyze-patterns
+
+# Find common workflows
+reqsmith ai find-workflows --days 30
+
+# Identify optimization opportunities
+reqsmith ai suggest-optimizations --history
+```
+
+### Pattern Examples
+
+```bash
+$ reqsmith ai analyze-patterns
+
+📊 API Usage Patterns Detected:
+
+1. Authentication Pattern:
+   - Always GET /auth/token before other requests
+   - Token expires every 1 hour
+   - Suggestion: Implement automatic token refresh
+
+2. Data Fetching Pattern:
+   - GET /users/{id} followed by GET /users/{id}/profile
+   - Could be optimized with single endpoint
+   - Suggestion: Use expanded response (?expand=profile)
+
+3. Error Handling Pattern:
+   - 401 errors always followed by re-authentication
+   - Suggestion: Implement automatic retry with auth refresh
+```
+
+## Documentation Generation
+
+### Auto-Generate Documentation
+
+AI can create documentation from your requests:
+
+```bash
+# Generate docs for all templates
+reqsmith ai generate-docs
+
+# Generate docs for specific template
+reqsmith ai generate-docs --template github-api
+
+# Generate API specification
+reqsmith ai generate-spec --format openapi
+
+# Generate usage examples
+reqsmith ai generate-examples --template user-management
+```
+
+### Documentation Types
+
+Different documentation formats:
+
+```bash
+# Markdown documentation
+reqsmith ai generate-docs --format markdown --output api-docs.md
+
+# OpenAPI specification
+reqsmith ai generate-docs --format openapi --output api-spec.yaml
+
+# Postman collection
+reqsmith ai generate-docs --format postman --output collection.json
+
+# HTML documentation
+reqsmith ai generate-docs --format html --output docs/
+```
+
+## Interactive AI Assistant
+
+### Chat with AI
+
+Interactive AI assistance:
+
+```bash
+# Start AI chat session
+reqsmith ai chat
+
+# Ask specific questions
+reqsmith ai ask "How do I handle pagination in this API?"
+
+# Get help with specific error
+reqsmith ai help --error "Connection timeout"
+```
+
+### Chat Examples
+
+```bash
+$ reqsmith ai chat
+
+🤖 ReqSmith AI Assistant
+Type 'exit' to quit, 'help' for commands
+
+> How do I test rate limiting?
+
+AI: To test rate limiting effectively:
+
+1. Use burst requests:
+   reqsmith repeat --count 100 --concurrent 10 api-endpoint
+
+2. Monitor response headers:
+   - X-RateLimit-Remaining
+   - X-RateLimit-Reset
+   - Retry-After
+
+3. Test recovery:
+   - Wait for rate limit reset
+   - Implement exponential backoff
+
+Would you like me to create a rate limit testing template?
+
+> yes, create template for GitHub API rate limiting
+
+AI: I'll create a comprehensive rate limiting test template...
+```
+
+## AI Command Reference
+
+### Core AI Commands
+
+```bash
+# AI status and configuration
+reqsmith ai status              # Check AI availability
+reqsmith ai config              # Show AI configuration
+reqsmith ai models              # List available AI models
+
+# Request assistance
+reqsmith ai suggest [URL]       # Get API endpoint suggestions
+reqsmith ai analyze [ID]        # Analyze request/response
+reqsmith ai diagnose [ID]       # Diagnose errors
+
+# Template operations
+reqsmith ai create-template     # Generate new template
+reqsmith ai optimize-template   # Improve existing template
+reqsmith ai analyze-template    # Analyze template quality
+
+# Pattern recognition
+reqsmith ai analyze-patterns    # Find usage patterns
+reqsmith ai find-workflows      # Identify common workflows
+reqsmith ai suggest-optimizations  # Performance suggestions
+
+# Documentation
+reqsmith ai generate-docs       # Create documentation
+reqsmith ai generate-spec       # Create API specifications
+reqsmith ai generate-examples   # Create usage examples
+
+# Interactive assistance
+reqsmith ai chat               # Start chat session
+reqsmith ai ask [question]     # Ask specific question
+reqsmith ai help [topic]       # Get help on topic
+```
+
+### AI Options
+
+Common options for AI commands:
+
+```bash
+# Model selection
+--model gemini-pro             # Specific AI model
+--temperature 0.3              # Creativity level (0.0-1.0)
+
+# Context options
+--env production               # Include environment context
+--template user-api            # Include template context
+--history                      # Include request history
+
+# Output options
+--format json                  # Output format
+--verbose                      # Detailed output
+--quiet                        # Minimal output
+
+# Analysis options
+--focus security               # Focus on specific aspect
+--include-logs                 # Include debug logs
+--explain                      # Explain AI reasoning
+```
+
+## Privacy and Security
+
+### Data Handling
+
+Understanding how AI processes your data:
+
+- **Local processing**: Request metadata processed locally
+- **API calls**: Only anonymized data sent to AI service
+- **No storage**: AI provider doesn't store your data
+- **Filtering**: Sensitive data filtered before AI analysis
+
+### Security Configuration
+
+Configure AI security settings:
+
+```bash
+# Disable AI for sensitive environments
+reqsmith config set ai.disabled_environments "production,staging"
+
+# Filter sensitive data from AI analysis
+reqsmith config set ai.filter_sensitive_data true
+
+# Set sensitive headers to exclude
+reqsmith config set ai.exclude_headers "Authorization,X-API-Key,Cookie"
+
+# Anonymize URLs in AI requests
+reqsmith config set ai.anonymize_urls true
+```
+
+### Privacy Options
+
+Control what data is shared:
+
+```bash
+# Disable response body analysis
+reqsmith config set ai.analyze_response_body false
+
+# Disable URL analysis
+reqsmith config set ai.analyze_urls false
+
+# Use local AI model (when available)
+reqsmith config set ai.prefer_local_model true
+
+# Review AI requests before sending
+reqsmith config set ai.review_before_send true
+```
+
+## Advanced AI Features
+
+### Custom Prompts
+
+Create custom AI prompts:
+
+```bash
+# Use custom analysis prompt
+reqsmith ai analyze --prompt "Focus on REST API best practices"
+
+# Create reusable prompt templates
+reqsmith ai create-prompt \
+  --name "security-review" \
+  --template "Analyze this API response for security vulnerabilities"
+
+# Use prompt templates
+reqsmith ai analyze --prompt-template security-review
+```
+
+### AI Workflows
+
+Combine AI features in workflows:
+
+```bash
+# Complete AI-assisted testing workflow
+reqsmith ai workflow \
+  --suggest-endpoints \
+  --create-templates \
+  --run-tests \
+  --analyze-results \
+  --generate-docs
+```
+
+### AI Plugins
+
+Extend AI capabilities:
+
+```bash
+# List available AI plugins
+reqsmith ai plugins list
+
+# Install AI plugin
+reqsmith ai plugins install security-scanner
+
+# Enable plugin
+reqsmith ai plugins enable security-scanner
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **AI not responding**: Check API key and network connection
+2. **Poor suggestions**: Provide more context in requests
+3. **Rate limits**: Monitor AI service usage limits
+4. **Accuracy issues**: Verify AI suggestions before using
+
+### Debug AI Features
+
+```bash
+# Enable AI debugging
+reqsmith config set ai.debug true
+
+# Test AI connection
+reqsmith ai test-connection
+
+# Show AI request/response
+reqsmith ai analyze --debug --explain
+
+# Check AI service status
+reqsmith ai service-status
+```
+
+## Best Practices
+
+1. **Start simple**: Begin with basic suggestions and analysis
+2. **Provide context**: Give AI relevant information for better results
+3. **Verify suggestions**: Always review AI recommendations
+4. **Protect sensitive data**: Configure appropriate privacy settings
+5. **Monitor usage**: Track AI service usage and costs
+6. **Combine with manual testing**: Use AI as an assistant, not replacement
+7. **Keep learning**: AI improves with more diverse usage patterns
+
+## Future AI Features
+
+Planned AI enhancements:
+- **Local AI models**: Offline AI capabilities
+- **Custom model training**: Train on your specific APIs
+- **Advanced pattern recognition**: More sophisticated usage analysis
+- **Automated test generation**: Complete test suite creation
+- **Performance optimization**: AI-driven performance tuning
+
+## Next Steps
+
+- Configure [AI settings](/configuration#ai-features) for your needs
+- Explore [Templates](/concepts/templates) with AI optimization
+- Check out [Examples](/examples/api-testing-workflow) with AI assistance
+- Learn about [Advanced Features](/advanced/troubleshooting) for AI debugging

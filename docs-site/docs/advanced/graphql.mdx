@@ -1,0 +1,835 @@
+---
+title: GraphQL Support
+description: "Work with GraphQL APIs using ReqSmith's specialized GraphQL features and tooling"
+---
+
+# GraphQL Support
+
+ReqSmith provides comprehensive support for GraphQL APIs, including query validation, introspection, fragment management, and specialized testing features designed for GraphQL workflows.
+
+## GraphQL Basics
+
+### Simple GraphQL Queries
+
+Execute GraphQL queries with ReqSmith:
+
+```bash
+# Basic GraphQL query
+reqsmith graphql https://api.github.com/graphql \
+  --query "{ viewer { login name } }"
+
+# Query from file
+reqsmith graphql https://api.github.com/graphql \
+  --query-file user-query.graphql
+
+# With variables
+reqsmith graphql https://api.github.com/graphql \
+  --query "query GetUser($login: String!) { user(login: $login) { name bio } }" \
+  --variables "login=octocat"
+```
+
+### GraphQL Query Files
+
+Store queries in `.graphql` files:
+
+```graphql
+# user-query.graphql
+query GetUser($login: String!) {
+  user(login: $login) {
+    login
+    name
+    bio
+    company
+    location
+    createdAt
+    repositories(first: 5) {
+      nodes {
+        name
+        description
+        stargazerCount
+      }
+    }
+  }
+}
+```
+
+```bash
+# Execute query from file
+reqsmith graphql https://api.github.com/graphql \
+  --query-file user-query.graphql \
+  --variables-file variables.json
+```
+
+### Variables and Input
+
+Handle GraphQL variables:
+
+```json
+// variables.json
+{
+  "login": "octocat",
+  "first": 10,
+  "after": null
+}
+```
+
+```bash
+# Variables from file
+reqsmith graphql https://api.github.com/graphql \
+  --query-file query.graphql \
+  --variables-file variables.json
+
+# Inline variables
+reqsmith graphql https://api.github.com/graphql \
+  --query-file query.graphql \
+  --variables "login=octocat,first=10"
+
+# Environment variables
+reqsmith graphql https://api.github.com/graphql \
+  --query-file query.graphql \
+  --variables "login=$GITHUB_USER"
+```
+
+## Schema Introspection
+
+### Download Schema
+
+Introspect and download GraphQL schemas:
+
+```bash
+# Download full schema
+reqsmith graphql introspect https://api.github.com/graphql \
+  --output github-schema.json
+
+# Download SDL format
+reqsmith graphql introspect https://api.github.com/graphql \
+  --format sdl \
+  --output github-schema.graphql
+
+# Minimal schema (types only)
+reqsmith graphql introspect https://api.github.com/graphql \
+  --minimal \
+  --output github-types.json
+```
+
+### Schema Analysis
+
+Analyze GraphQL schemas:
+
+```bash
+# Show schema statistics
+reqsmith graphql schema-stats github-schema.json
+
+# List all types
+reqsmith graphql list-types github-schema.json
+
+# Show specific type details
+reqsmith graphql describe-type github-schema.json User
+
+# Find types by pattern
+reqsmith graphql find-types github-schema.json --pattern "*Repository*"
+```
+
+### Schema Validation
+
+Validate queries against schema:
+
+```bash
+# Validate query file
+reqsmith graphql validate \
+  --schema github-schema.json \
+  --query-file user-query.graphql
+
+# Validate with variables
+reqsmith graphql validate \
+  --schema github-schema.json \
+  --query-file user-query.graphql \
+  --variables-file variables.json
+
+# Batch validate multiple queries
+reqsmith graphql validate-batch \
+  --schema github-schema.json \
+  --queries-dir ./graphql-queries/
+```
+
+## Query Management
+
+### Query Collections
+
+Organize queries in collections:
+
+```yaml
+# github-queries.yaml
+name: GitHub API Queries
+description: Common GitHub GraphQL queries
+schema: github-schema.json
+
+queries:
+  - name: get-user
+    description: Get user information
+    file: queries/user.graphql
+    variables:
+      login: "{{username}}"
+    
+  - name: list-repositories
+    description: List user repositories
+    file: queries/repositories.graphql
+    variables:
+      login: "{{username}}"
+      first: 20
+    
+  - name: search-repositories
+    description: Search repositories
+    file: queries/search.graphql
+    variables:
+      query: "{{search_term}}"
+      first: 10
+```
+
+### Execute from Collections
+
+Run queries from collections:
+
+```bash
+# List queries in collection
+reqsmith graphql collection list github-queries.yaml
+
+# Execute specific query
+reqsmith graphql collection run github-queries.yaml get-user \
+  --variables "username=octocat"
+
+# Execute all queries in collection
+reqsmith graphql collection run-all github-queries.yaml \
+  --variables "username=octocat"
+```
+
+### Query Templates
+
+Create reusable query templates:
+
+```graphql
+# user-template.graphql
+query GetUser($login: String!, $includeRepos: Boolean = false) {
+  user(login: $login) {
+    login
+    name
+    bio
+    company
+    location
+    createdAt
+    repositories(first: 10) @include(if: $includeRepos) {
+      nodes {
+        name
+        description
+        stargazerCount
+      }
+    }
+  }
+}
+```
+
+## Fragments and Composition
+
+### Fragment Management
+
+Use GraphQL fragments for reusability:
+
+```graphql
+# fragments/user-fields.graphql
+fragment UserFields on User {
+  login
+  name
+  bio
+  company
+  location
+  createdAt
+  avatarUrl
+}
+```
+
+```graphql
+# fragments/repository-fields.graphql
+fragment RepositoryFields on Repository {
+  name
+  description
+  stargazerCount
+  forkCount
+  primaryLanguage {
+    name
+    color
+  }
+}
+```
+
+```graphql
+# queries/user-with-repos.graphql
+#import "fragments/user-fields.graphql"
+#import "fragments/repository-fields.graphql"
+
+query GetUserWithRepositories($login: String!) {
+  user(login: $login) {
+    ...UserFields
+    repositories(first: 10) {
+      nodes {
+        ...RepositoryFields
+      }
+    }
+  }
+}
+```
+
+### Fragment Validation
+
+Validate fragment usage:
+
+```bash
+# Validate fragments
+reqsmith graphql validate-fragments \
+  --schema github-schema.json \
+  --fragments-dir ./fragments/
+
+# Check fragment usage
+reqsmith graphql check-fragments \
+  --queries-dir ./queries/ \
+  --fragments-dir ./fragments/
+```
+
+## Advanced GraphQL Features
+
+### Pagination
+
+Handle GraphQL pagination:
+
+```graphql
+# pagination-query.graphql
+query GetRepositories($login: String!, $first: Int!, $after: String) {
+  user(login: $login) {
+    repositories(first: $first, after: $after) {
+      edges {
+        node {
+          name
+          description
+          stargazerCount
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+```
+
+```bash
+# Automatic pagination
+reqsmith graphql paginate https://api.github.com/graphql \
+  --query-file pagination-query.graphql \
+  --variables "login=octocat,first=10" \
+  --paginate-field "user.repositories" \
+  --max-pages 5
+
+# Manual pagination
+reqsmith graphql https://api.github.com/graphql \
+  --query-file pagination-query.graphql \
+  --variables "login=octocat,first=10,after=Y3Vyc29yOjEw"
+```
+
+### Subscriptions
+
+Handle GraphQL subscriptions:
+
+```bash
+# WebSocket subscription
+reqsmith graphql subscribe wss://api.example.com/graphql \
+  --subscription "subscription { messageAdded { id content author } }"
+
+# Subscription with variables
+reqsmith graphql subscribe wss://api.example.com/graphql \
+  --subscription-file subscription.graphql \
+  --variables "channelId=123"
+
+# Save subscription messages
+reqsmith graphql subscribe wss://api.example.com/graphql \
+  --subscription-file subscription.graphql \
+  --output messages.jsonl \
+  --duration 60
+```
+
+### Mutations
+
+Execute GraphQL mutations:
+
+```graphql
+# create-issue.mutation.graphql
+mutation CreateIssue($repositoryId: ID!, $title: String!, $body: String) {
+  createIssue(input: {
+    repositoryId: $repositoryId
+    title: $title
+    body: $body
+  }) {
+    issue {
+      id
+      number
+      title
+      url
+    }
+  }
+}
+```
+
+```bash
+# Execute mutation
+reqsmith graphql https://api.github.com/graphql \
+  --mutation-file create-issue.mutation.graphql \
+  --variables "repositoryId=R_123,title=New Issue,body=Issue description"
+
+# Mutation with confirmation
+reqsmith graphql https://api.github.com/graphql \
+  --mutation-file create-issue.mutation.graphql \
+  --variables-file variables.json \
+  --confirm
+```
+
+## GraphQL Templates
+
+### Creating GraphQL Templates
+
+Design templates for GraphQL workflows:
+
+```yaml
+# github-graphql-template.yaml
+name: github-graphql-api
+description: GitHub GraphQL API operations
+type: graphql
+
+config:
+  endpoint: "https://api.github.com/graphql"
+  headers:
+    Authorization: "Bearer {{github_token}}"
+    User-Agent: "ReqSmith GraphQL Client"
+
+operations:
+  - name: get-user
+    type: query
+    query_file: "queries/user.graphql"
+    variables:
+      login: "{{username}}"
+    
+  - name: search-repositories
+    type: query
+    query_file: "queries/search-repos.graphql"
+    variables:
+      query: "{{search_term}}"
+      first: "{{limit:10}}"
+    
+  - name: create-issue
+    type: mutation
+    query_file: "mutations/create-issue.graphql"
+    variables:
+      repositoryId: "{{repo_id}}"
+      title: "{{issue_title}}"
+      body: "{{issue_body}}"
+    confirmation_required: true
+```
+
+### Template Execution
+
+Execute GraphQL templates:
+
+```bash
+# Run specific operation
+reqsmith template run github-graphql-api get-user \
+  --var username=octocat
+
+# Run with environment
+reqsmith template run github-graphql-api search-repositories \
+  --env production \
+  --var search_term="machine learning"
+
+# Run all operations
+reqsmith template run github-graphql-api \
+  --var username=octocat \
+  --var search_term="api"
+```
+
+## Testing GraphQL APIs
+
+### Query Testing
+
+Test GraphQL queries systematically:
+
+```bash
+# Test query with different variables
+reqsmith graphql test \
+  --query-file user-query.graphql \
+  --test-cases test-cases.json \
+  --endpoint https://api.github.com/graphql
+
+# Batch test multiple queries
+reqsmith graphql test-batch \
+  --queries-dir ./queries/ \
+  --variables-dir ./test-data/ \
+  --endpoint https://api.github.com/graphql
+```
+
+### Test Cases
+
+Define GraphQL test cases:
+
+```json
+// test-cases.json
+{
+  "test_cases": [
+    {
+      "name": "valid user",
+      "variables": {"login": "octocat"},
+      "expected_status": 200,
+      "expected_fields": ["data.user.login", "data.user.name"]
+    },
+    {
+      "name": "invalid user",
+      "variables": {"login": "nonexistent-user-12345"},
+      "expected_status": 200,
+      "expected_errors": ["User not found"]
+    }
+  ]
+}
+```
+
+### Performance Testing
+
+Test GraphQL performance:
+
+```bash
+# Load test GraphQL endpoint
+reqsmith graphql load-test \
+  --query-file queries/user.graphql \
+  --variables-file variables.json \
+  --concurrent 10 \
+  --duration 60 \
+  --endpoint https://api.github.com/graphql
+
+# Query complexity analysis
+reqsmith graphql analyze-complexity \
+  --query-file complex-query.graphql \
+  --schema github-schema.json \
+  --max-depth 10 \
+  --max-complexity 1000
+```
+
+## Error Handling
+
+### GraphQL Error Analysis
+
+Analyze GraphQL errors:
+
+```bash
+# Analyze query errors
+reqsmith graphql analyze-errors \
+  --query-file problematic-query.graphql \
+  --schema github-schema.json
+
+# Error pattern analysis
+reqsmith graphql error-patterns \
+  --logs graphql-errors.log \
+  --schema github-schema.json
+```
+
+### Error Recovery
+
+Handle GraphQL errors gracefully:
+
+```bash
+# Retry with partial queries
+reqsmith graphql retry \
+  --query-file failed-query.graphql \
+  --partial-retry \
+  --exclude-fields "complexField"
+
+# Fallback to simpler query
+reqsmith graphql fallback \
+  --primary-query complex-query.graphql \
+  --fallback-query simple-query.graphql
+```
+
+## Development Tools
+
+### Query Generation
+
+Generate queries from schema:
+
+```bash
+# Generate query for type
+reqsmith graphql generate-query \
+  --schema github-schema.json \
+  --type User \
+  --depth 2 \
+  --output generated-user-query.graphql
+
+# Generate CRUD operations
+reqsmith graphql generate-crud \
+  --schema schema.json \
+  --type Article \
+  --output-dir ./generated-queries/
+```
+
+### Schema Diff
+
+Compare GraphQL schemas:
+
+```bash
+# Compare schema versions
+reqsmith graphql schema-diff \
+  --old-schema old-schema.json \
+  --new-schema new-schema.json \
+  --output schema-changes.html
+
+# Breaking changes analysis
+reqsmith graphql breaking-changes \
+  --old-schema v1-schema.json \
+  --new-schema v2-schema.json
+```
+
+### Query Optimization
+
+Optimize GraphQL queries:
+
+```bash
+# Analyze query performance
+reqsmith graphql optimize \
+  --query-file slow-query.graphql \
+  --schema schema.json \
+  --suggest-improvements
+
+# Field usage analysis
+reqsmith graphql field-usage \
+  --queries-dir ./queries/ \
+  --schema schema.json \
+  --report field-usage.html
+```
+
+## Configuration
+
+### GraphQL Configuration
+
+Configure GraphQL-specific settings:
+
+```bash
+# Set default GraphQL endpoint
+reqsmith config set graphql.default_endpoint "https://api.github.com/graphql"
+
+# Set schema cache location
+reqsmith config set graphql.schema_cache_dir "~/.reqsmith/schemas"
+
+# Enable query validation
+reqsmith config set graphql.validate_queries true
+
+# Set default fragment directory
+reqsmith config set graphql.fragments_dir "./fragments"
+
+# Configure pagination defaults
+reqsmith config set graphql.pagination.max_pages 10
+reqsmith config set graphql.pagination.page_size 20
+```
+
+### Schema Management
+
+Manage multiple schemas:
+
+```bash
+# Add schema to registry
+reqsmith graphql schema add \
+  --name github \
+  --url https://api.github.com/graphql \
+  --auth-header "Authorization: Bearer $GITHUB_TOKEN"
+
+# List registered schemas
+reqsmith graphql schema list
+
+# Update schema
+reqsmith graphql schema update github
+
+# Use registered schema
+reqsmith graphql --schema github \
+  --query "{ viewer { login } }"
+```
+
+## Best Practices
+
+### Query Design
+
+1. **Use fragments**: Reuse common field selections
+2. **Limit depth**: Avoid deeply nested queries
+3. **Request only needed fields**: Don't over-fetch data
+4. **Use variables**: Make queries reusable
+5. **Handle pagination**: Implement proper pagination
+6. **Add aliases**: Avoid field conflicts
+
+### Performance
+
+1. **Analyze complexity**: Monitor query complexity
+2. **Cache responses**: Use caching for repeated queries
+3. **Batch requests**: Use query batching when supported
+4. **Optimize fragments**: Keep fragments focused
+5. **Monitor field usage**: Remove unused fields
+
+### Testing
+
+1. **Test edge cases**: Invalid inputs, missing data
+2. **Validate schemas**: Keep schemas up to date
+3. **Test pagination**: Verify pagination behavior
+4. **Error handling**: Test error scenarios
+5. **Performance testing**: Load test critical queries
+
+## Integration Examples
+
+### CI/CD Pipeline
+
+Use GraphQL in CI/CD:
+
+```yaml
+# .github/workflows/graphql-tests.yml
+name: GraphQL API Tests
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Install ReqSmith
+        run: pip install reqsmith
+        
+      - name: Validate GraphQL Queries
+        run: |
+          reqsmith graphql validate-batch \
+            --schema ./schema.json \
+            --queries-dir ./graphql-queries/
+            
+      - name: Run GraphQL Tests
+        run: |
+          reqsmith graphql test-batch \
+            --queries-dir ./graphql-queries/ \
+            --test-cases ./test-cases/ \
+            --endpoint ${{ secrets.GRAPHQL_ENDPOINT }}
+        env:
+          GRAPHQL_TOKEN: ${{ secrets.GRAPHQL_TOKEN }}
+```
+
+### Schema Evolution
+
+Track schema changes:
+
+```bash
+# Daily schema check
+reqsmith graphql schema update production
+reqsmith graphql breaking-changes \
+  --old-schema previous-schema.json \
+  --new-schema current-schema.json \
+  --notify-on-breaking
+
+# Automated validation
+reqsmith graphql validate-batch \
+  --schema current-schema.json \
+  --queries-dir ./queries/ \
+  --fail-on-error
+```
+
+## Command Reference
+
+### Core GraphQL Commands
+
+```bash
+# Execute GraphQL operations
+reqsmith graphql <endpoint>           # Execute query/mutation
+reqsmith graphql subscribe <endpoint> # Execute subscription
+reqsmith graphql introspect <endpoint> # Schema introspection
+
+# Schema operations
+reqsmith graphql schema add           # Add schema to registry
+reqsmith graphql schema list          # List schemas
+reqsmith graphql schema update        # Update schema
+reqsmith graphql schema-diff          # Compare schemas
+
+# Query management
+reqsmith graphql validate             # Validate query
+reqsmith graphql validate-batch       # Validate multiple queries
+reqsmith graphql generate-query       # Generate query from schema
+reqsmith graphql optimize             # Optimize query
+
+# Testing
+reqsmith graphql test                 # Test query
+reqsmith graphql test-batch           # Test multiple queries
+reqsmith graphql load-test            # Performance testing
+
+# Collections
+reqsmith graphql collection list      # List collection queries
+reqsmith graphql collection run       # Run collection query
+reqsmith graphql collection run-all   # Run all collection queries
+```
+
+### GraphQL Options
+
+```bash
+# Query/Mutation options
+--query QUERY                   # GraphQL query string
+--query-file FILE               # Query from file
+--mutation-file FILE            # Mutation from file
+--variables VARS                # Variables (key=value,...)
+--variables-file FILE           # Variables from file
+
+# Schema options
+--schema FILE                   # Schema file
+--schema-url URL                # Schema endpoint
+--introspect                    # Auto-introspect schema
+
+# Output options
+--output FILE                   # Output file
+--format FORMAT                 # Output format (json, table)
+--pretty                        # Pretty-print JSON
+
+# Advanced options
+--paginate-field FIELD          # Auto-paginate field
+--max-pages N                   # Maximum pages
+--confirm                       # Confirm mutations
+--partial-retry                 # Retry with partial queries
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Schema errors**: Update or re-introspect schema
+2. **Query validation fails**: Check query syntax and schema
+3. **Variables not working**: Verify variable types and values
+4. **Fragments not found**: Check fragment paths and imports
+5. **Subscription connection fails**: Verify WebSocket endpoint
+
+### Debug GraphQL
+
+```bash
+# Enable GraphQL debugging
+reqsmith config set graphql.debug true
+
+# Verbose query execution
+reqsmith graphql --verbose \
+  --query-file debug-query.graphql
+
+# Analyze query complexity
+reqsmith graphql analyze-complexity \
+  --query-file complex-query.graphql \
+  --schema schema.json
+
+# Test schema connectivity
+reqsmith graphql introspect https://api.example.com/graphql --test-only
+```
+
+## Next Steps
+
+- Learn about [Authentication](/advanced/authentication) for GraphQL endpoints
+- Explore [Batch Requests](/advanced/batch-requests) for GraphQL operations
+- Check out [Examples](/examples/graphql-api) for GraphQL workflows
+- See [Configuration](/configuration) for GraphQL settings

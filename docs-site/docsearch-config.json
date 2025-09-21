@@ -1,0 +1,88 @@
+{
+  "index_name": "reqsmith",
+  "start_urls": [
+    {
+      "url": "https://vesperakshay.github.io/reqsmith/",
+      "selectors_key": "default",
+      "tags": ["docs"]
+    }
+  ],
+  "sitemap_urls": [
+    "https://vesperakshay.github.io/reqsmith/sitemap.xml"
+  ],
+  "selectors": {
+    "default": {
+      "lvl0": {
+        "selector": ".navbar__title, h1",
+        "default_value": "ReqSmith Documentation"
+      },
+      "lvl1": "article h1, .theme-doc-markdown h1",
+      "lvl2": "article h2, .theme-doc-markdown h2",
+      "lvl3": "article h3, .theme-doc-markdown h3",
+      "lvl4": "article h4, .theme-doc-markdown h4",
+      "lvl5": "article h5, .theme-doc-markdown h5",
+      "lvl6": "article h6, .theme-doc-markdown h6",
+      "text": "article p, article li, .theme-doc-markdown p, .theme-doc-markdown li, .theme-doc-markdown td",
+      "lang": {
+        "selector": "/html/@lang",
+        "type": "xpath",
+        "global": true
+      }
+    }
+  },
+  "selectors_exclude": [
+    ".hash-link",
+    ".navbar",
+    ".footer",
+    ".table-of-contents",
+    ".theme-admonition-caution",
+    ".theme-code-block-highlighted-line"
+  ],
+  "custom_settings": {
+    "attributeForDistinct": "url_without_anchor",
+    "customRanking": [
+      "desc(weight.pageRank)",
+      "desc(weight.level)",
+      "asc(weight.position)"
+    ],
+    "searchableAttributes": [
+      "unordered(hierarchy.lvl0)",
+      "unordered(hierarchy.lvl1)",
+      "unordered(hierarchy.lvl2)",
+      "unordered(hierarchy.lvl3)",
+      "unordered(hierarchy.lvl4)",
+      "unordered(hierarchy.lvl5)",
+      "unordered(hierarchy.lvl6)",
+      "content"
+    ],
+    "attributesToRetrieve": [
+      "hierarchy",
+      "content",
+      "anchor",
+      "url",
+      "url_without_anchor"
+    ],
+    "attributesToHighlight": [
+      "hierarchy",
+      "content"
+    ],
+    "attributesToSnippet": [
+      "content:10"
+    ],
+    "snippetEllipsisText": "…",
+    "highlightPreTag": "<mark>",
+    "highlightPostTag": "</mark>",
+    "minWordSizefor1Typo": 3,
+    "minWordSizefor2Typos": 7,
+    "allowTyposOnNumericTokens": false,
+    "minProximity": 1,
+    "ignorePlurals": true,
+    "advancedSyntax": true,
+    "replaceSynonymsInHighlight": false,
+    "analytics": true,
+    "analyticsTags": ["docusaurus", "reqsmith", "api-testing", "ai-powered"]
+  },
+  "conversation_id": ["1234567890"],
+  "strip_chars": " .,;:#",
+  "nb_hits": "max_value"
+}

@@ -1,0 +1,722 @@
+---
+title: Authentication
+description: "Handle various authentication methods in ReqSmith for secure API access"
+---
+
+# Authentication
+
+ReqSmith supports a wide range of authentication methods for secure API access, including API keys, OAuth, JWT tokens, client certificates, and custom authentication schemes.
+
+## Overview
+
+ReqSmith handles authentication through:
+- **Multiple auth methods**: API keys, Bearer tokens, OAuth, Basic auth, etc.
+- **Environment-specific auth**: Different credentials per environment
+- **Token management**: Automatic token refresh and renewal
+- **Secure storage**: Encrypted credential storage
+- **Auth helpers**: Simplified authentication workflows
+
+## Basic Authentication Methods
+
+### API Key Authentication
+
+Most common form of API authentication:
+
+```bash
+# Header-based API key
+reqsmith get https://api.example.com/data \
+  --header "X-API-Key: your-api-key-here"
+
+# Query parameter API key
+reqsmith get "https://api.example.com/data?api_key=your-api-key"
+
+# Multiple API keys
+reqsmith get https://api.example.com/data \
+  --header "X-API-Key: primary-key" \
+  --header "X-Secondary-Key: secondary-key"
+```
+
+### Bearer Token Authentication
+
+Common for JWT and OAuth tokens:
+
+```bash
+# Bearer token
+reqsmith get https://api.example.com/data \
+  --header "Authorization: Bearer your-jwt-token"
+
+# JWT token with custom header
+reqsmith get https://api.example.com/data \
+  --header "X-Auth-Token: your-jwt-token"
+```
+
+### Basic Authentication
+
+Username and password authentication:
+
+```bash
+# Basic auth with credentials
+reqsmith get https://api.example.com/data \
+  --auth username:password
+
+# Basic auth with encoded credentials
+reqsmith get https://api.example.com/data \
+  --header "Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ="
+```
+
+## Environment-Based Authentication
+
+### Auth in Environments
+
+Configure authentication per environment:
+
+```yaml
+# environments/production.yaml
+name: production
+description: Production environment
+base_url: https://api.example.com
+auth:
+  type: bearer
+  token: "${PROD_API_TOKEN}"
+  
+headers:
+  User-Agent: "MyApp/1.0"
+  X-Environment: "production"
+```
+
+```yaml
+# environments/development.yaml  
+name: development
+description: Development environment
+base_url: https://dev-api.example.com
+auth:
+  type: api_key
+  header: "X-API-Key"
+  value: "${DEV_API_KEY}"
+```
+
+### Environment Variables
+
+Store credentials securely:
+
+```bash
+# Set environment variables
+export PROD_API_TOKEN="eyJhbGciOiJIUzI1NiIs..."
+export DEV_API_KEY="dev-key-12345"
+
+# Use in requests
+reqsmith get /users --env production
+reqsmith get /users --env development
+```
+
+### Environment Files
+
+Use `.env` files for credentials:
+
+```bash
+# .env.production
+PROD_API_TOKEN=eyJhbGciOiJIUzI1NiIs...
+PROD_CLIENT_ID=your-client-id
+PROD_CLIENT_SECRET=your-client-secret
+
+# .env.development  
+DEV_API_KEY=dev-key-12345
+DEV_USERNAME=dev-user
+DEV_PASSWORD=dev-pass
+```
+
+## OAuth Authentication
+
+### OAuth 2.0 Flow
+
+Handle OAuth 2.0 authentication:
+
+```bash
+# Start OAuth flow
+reqsmith auth oauth \
+  --provider github \
+  --client-id your-client-id \
+  --client-secret your-client-secret \
+  --scope "user:email repo"
+
+# Use OAuth token
+reqsmith get https://api.github.com/user \
+  --auth-provider github
+```
+
+### OAuth Configuration
+
+Configure OAuth providers:
+
+```yaml
+# auth/oauth-providers.yaml
+providers:
+  github:
+    auth_url: https://github.com/login/oauth/authorize
+    token_url: https://github.com/login/oauth/access_token
+    client_id: "${GITHUB_CLIENT_ID}"
+    client_secret: "${GITHUB_CLIENT_SECRET}"
+    scopes: ["user:email", "repo"]
+    
+  google:
+    auth_url: https://accounts.google.com/o/oauth2/auth
+    token_url: https://oauth2.googleapis.com/token
+    client_id: "${GOOGLE_CLIENT_ID}"
+    client_secret: "${GOOGLE_CLIENT_SECRET}"
+    scopes: ["profile", "email"]
+```
+
+### OAuth Token Refresh
+
+Automatic token refresh:
+
+```bash
+# Enable automatic refresh
+reqsmith config set auth.oauth.auto_refresh true
+
+# Manual token refresh
+reqsmith auth refresh github
+
+# Check token status
+reqsmith auth status github
+```
+
+## JWT Token Management
+
+### JWT Token Handling
+
+Work with JWT tokens:
+
+```bash
+# Decode JWT token (without verification)
+reqsmith auth jwt decode "eyJhbGciOiJIUzI1NiIs..."
+
+# Verify JWT token
+reqsmith auth jwt verify \
+  --token "eyJhbGciOiJIUzI1NiIs..." \
+  --secret "your-secret-key"
+
+# Extract claims from JWT
+reqsmith auth jwt claims \
+  --token "eyJhbGciOiJIUzI1NiIs..." \
+  --claim "exp,iat,sub"
+```
+
+### JWT Templates
+
+Use JWT in templates:
+
+```yaml
+# templates/auth-template.yaml
+name: jwt-authenticated-api
+description: API with JWT authentication
+
+requests:
+  - name: login
+    method: POST
+    url: "{{base_url}}/auth/login"
+    headers:
+      Content-Type: application/json
+    body: |
+      {
+        "username": "{{username}}",
+        "password": "{{password}}"
+      }
+    extract:
+      jwt_token: "response.body.token"
+      
+  - name: get-profile
+    method: GET
+    url: "{{base_url}}/user/profile"
+    headers:
+      Authorization: "Bearer {{jwt_token}}"
+    depends_on: ["login"]
+```
+
+### Token Expiry Handling
+
+Handle token expiration:
+
+```bash
+# Check token expiry
+reqsmith auth check-expiry --token "eyJhbGciOiJIUzI1NiIs..."
+
+# Auto-refresh before expiry
+reqsmith config set auth.jwt.refresh_threshold 300  # 5 minutes
+
+# Custom expiry handler
+reqsmith config set auth.jwt.expiry_handler "login_again"
+```
+
+## Advanced Authentication
+
+### Client Certificates
+
+Use client certificates for authentication:
+
+```bash
+# Client certificate authentication
+reqsmith get https://api.example.com/secure \
+  --cert client.crt \
+  --key client.key
+
+# Certificate with CA bundle
+reqsmith get https://api.example.com/secure \
+  --cert client.crt \
+  --key client.key \
+  --ca-bundle ca-bundle.crt
+
+# PKCS12 certificate
+reqsmith get https://api.example.com/secure \
+  --cert client.p12 \
+  --cert-password "cert-password"
+```
+
+### Custom Authentication Schemes
+
+Implement custom authentication:
+
+```bash
+# Custom header authentication
+reqsmith get https://api.example.com/data \
+  --header "X-Custom-Auth: custom-value"
+
+# Signature-based authentication
+reqsmith get https://api.example.com/data \
+  --auth-custom \
+  --auth-script custom-auth.py
+
+# AWS Signature V4
+reqsmith get https://s3.amazonaws.com/bucket/object \
+  --auth aws4 \
+  --aws-access-key "${AWS_ACCESS_KEY}" \
+  --aws-secret-key "${AWS_SECRET_KEY}" \
+  --aws-region us-east-1
+```
+
+### Multi-Factor Authentication
+
+Handle MFA scenarios:
+
+```bash
+# MFA with TOTP
+reqsmith auth mfa \
+  --provider okta \
+  --username user@example.com \
+  --totp-secret "your-totp-secret"
+
+# MFA with push notification
+reqsmith auth mfa \
+  --provider duo \
+  --username user@example.com \
+  --push
+```
+
+## Authentication Templates
+
+### Auth-Enabled Templates
+
+Create templates with authentication:
+
+```yaml
+# templates/authenticated-api.yaml
+name: secure-api
+description: API with multiple auth methods
+
+auth:
+  method: bearer
+  token: "{{auth_token}}"
+  
+requests:
+  - name: get-user
+    method: GET
+    url: "{{base_url}}/user"
+    # Inherits auth from template
+    
+  - name: update-user
+    method: PUT
+    url: "{{base_url}}/user"
+    headers:
+      Content-Type: application/json
+    body: |
+      {
+        "name": "{{user_name}}",
+        "email": "{{user_email}}"
+      }
+    # Custom auth override
+    auth:
+      method: api_key
+      header: "X-Admin-Key"
+      value: "{{admin_key}}"
+```
+
+### Multi-Step Authentication
+
+Handle complex auth flows:
+
+```yaml
+# templates/multi-step-auth.yaml
+name: multi-step-authentication
+description: Complex authentication workflow
+
+requests:
+  - name: get-csrf-token
+    method: GET
+    url: "{{base_url}}/csrf"
+    extract:
+      csrf_token: "response.headers.X-CSRF-Token"
+      
+  - name: login
+    method: POST
+    url: "{{base_url}}/login"
+    headers:
+      Content-Type: application/json
+      X-CSRF-Token: "{{csrf_token}}"
+    body: |
+      {
+        "username": "{{username}}",
+        "password": "{{password}}"
+      }
+    extract:
+      session_id: "response.body.session_id"
+      access_token: "response.body.access_token"
+    depends_on: ["get-csrf-token"]
+    
+  - name: access-protected-resource
+    method: GET
+    url: "{{base_url}}/protected"
+    headers:
+      Authorization: "Bearer {{access_token}}"
+      X-Session-ID: "{{session_id}}"
+    depends_on: ["login"]
+```
+
+## Credential Management
+
+### Secure Storage
+
+Store credentials securely:
+
+```bash
+# Store credentials in encrypted vault
+reqsmith auth store \
+  --name production-api \
+  --type bearer \
+  --token "your-token-here" \
+  --encrypt
+
+# List stored credentials
+reqsmith auth list
+
+# Use stored credentials
+reqsmith get https://api.example.com/data \
+  --auth-name production-api
+
+# Remove stored credentials
+reqsmith auth remove production-api
+```
+
+### Credential Rotation
+
+Rotate credentials regularly:
+
+```bash
+# Rotate API key
+reqsmith auth rotate \
+  --name api-service \
+  --new-key "new-api-key" \
+  --test-endpoint "/health"
+
+# Schedule automatic rotation
+reqsmith auth schedule-rotation \
+  --name api-service \
+  --interval "30 days" \
+  --notification-email "admin@example.com"
+```
+
+### Credential Validation
+
+Validate credentials:
+
+```bash
+# Test credentials
+reqsmith auth test \
+  --name production-api \
+  --endpoint "https://api.example.com/health"
+
+# Validate all stored credentials
+reqsmith auth validate-all
+
+# Check credential expiry
+reqsmith auth check-expiry --all
+```
+
+## Authentication Helpers
+
+### Quick Auth Setup
+
+Simplified authentication setup:
+
+```bash
+# GitHub authentication
+reqsmith auth setup github \
+  --interactive
+
+# Google Cloud authentication
+reqsmith auth setup gcp \
+  --service-account key.json
+
+# AWS authentication
+reqsmith auth setup aws \
+  --profile default
+
+# Basic auth setup
+reqsmith auth setup basic \
+  --username user \
+  --password-prompt
+```
+
+### Auth Providers
+
+Pre-configured auth providers:
+
+```bash
+# List available providers
+reqsmith auth providers
+
+# GitHub provider
+reqsmith auth provider github \
+  --token "ghp_xxxxxxxxxxxx"
+
+# Twitter API provider
+reqsmith auth provider twitter \
+  --api-key "your-key" \
+  --api-secret "your-secret" \
+  --access-token "your-token" \
+  --access-secret "your-token-secret"
+
+# Custom provider
+reqsmith auth provider custom \
+  --name myapi \
+  --auth-url "https://api.example.com/auth" \
+  --token-url "https://api.example.com/token"
+```
+
+## Security Best Practices
+
+### Credential Security
+
+1. **Never commit credentials**: Use environment variables or encrypted storage
+2. **Rotate regularly**: Change credentials periodically
+3. **Use least privilege**: Grant minimal required permissions
+4. **Monitor usage**: Track credential usage and anomalies
+5. **Secure transmission**: Always use HTTPS for credential exchange
+
+### Environment Isolation
+
+```bash
+# Separate credentials by environment
+reqsmith config set auth.environment_isolation true
+
+# Prevent cross-environment credential usage
+reqsmith config set auth.strict_environment_matching true
+
+# Require confirmation for production auth
+reqsmith config set auth.production_confirmation true
+```
+
+### Audit and Monitoring
+
+```bash
+# Enable auth audit logging
+reqsmith config set auth.audit_log true
+
+# Log auth events
+reqsmith config set auth.log_events "login,logout,refresh,failure"
+
+# Monitor credential usage
+reqsmith auth monitor \
+  --name production-api \
+  --alert-on-unusual-usage
+```
+
+## Troubleshooting Authentication
+
+### Common Issues
+
+1. **401 Unauthorized**: Check credentials and permissions
+2. **403 Forbidden**: Verify account has required access
+3. **Token expired**: Refresh or renew tokens
+4. **Invalid signature**: Check signing algorithm and keys
+5. **Rate limited**: Verify auth rate limits
+
+### Debug Authentication
+
+```bash
+# Debug auth headers
+reqsmith get https://api.example.com/data \
+  --auth-debug \
+  --verbose
+
+# Test auth flow
+reqsmith auth test-flow \
+  --provider oauth-provider \
+  --debug
+
+# Validate auth configuration
+reqsmith auth validate-config \
+  --config auth-config.yaml
+
+# Check auth status
+reqsmith auth status --all
+```
+
+### Auth Diagnostics
+
+```bash
+# Diagnose auth issues
+reqsmith auth diagnose \
+  --endpoint https://api.example.com \
+  --auth-method bearer \
+  --token "your-token"
+
+# Test connectivity
+reqsmith auth connectivity-test \
+  --provider github
+
+# Verify SSL/TLS
+reqsmith auth ssl-test \
+  --endpoint https://api.example.com
+```
+
+## Integration Examples
+
+### CI/CD Authentication
+
+Secure authentication in CI/CD:
+
+```yaml
+# .github/workflows/api-tests.yml
+name: API Tests
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Setup ReqSmith
+        run: pip install reqsmith
+        
+      - name: Configure Authentication
+        run: |
+          reqsmith auth store \
+            --name api-service \
+            --type bearer \
+            --token ${{ secrets.API_TOKEN }} \
+            --encrypt
+        env:
+          REQSMITH_ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+          
+      - name: Run API Tests
+        run: |
+          reqsmith template run api-tests \
+            --auth-name api-service \
+            --env staging
+```
+
+### Service-to-Service Auth
+
+Authenticate between services:
+
+```bash
+# Service account authentication
+reqsmith auth service-account \
+  --credential-file service-account.json \
+  --scopes "https://www.googleapis.com/auth/cloud-platform"
+
+# Machine-to-machine auth
+reqsmith auth machine \
+  --client-id "client-id" \
+  --client-secret "client-secret" \
+  --audience "https://api.example.com"
+```
+
+## Command Reference
+
+### Core Auth Commands
+
+```bash
+# Authentication setup
+reqsmith auth setup PROVIDER      # Setup auth provider
+reqsmith auth store               # Store credentials
+reqsmith auth list                # List stored credentials
+reqsmith auth remove              # Remove credentials
+
+# OAuth operations
+reqsmith auth oauth               # OAuth flow
+reqsmith auth refresh             # Refresh token
+reqsmith auth revoke              # Revoke token
+
+# JWT operations
+reqsmith auth jwt decode          # Decode JWT
+reqsmith auth jwt verify          # Verify JWT
+reqsmith auth jwt claims          # Extract claims
+
+# Testing and validation
+reqsmith auth test                # Test credentials
+reqsmith auth validate            # Validate configuration
+reqsmith auth diagnose            # Diagnose issues
+
+# Management
+reqsmith auth rotate              # Rotate credentials
+reqsmith auth monitor             # Monitor usage
+reqsmith auth audit               # Audit logs
+```
+
+### Auth Options
+
+```bash
+# Basic auth options
+--auth USER:PASS                  # Basic authentication
+--header "Authorization: VALUE"   # Custom auth header
+--api-key KEY                     # API key
+
+# Advanced auth options
+--auth-provider PROVIDER          # Use auth provider
+--auth-name NAME                  # Use stored credentials
+--cert CERT --key KEY             # Client certificates
+--auth-custom --auth-script FILE  # Custom auth script
+
+# OAuth options
+--oauth-provider PROVIDER         # OAuth provider
+--client-id ID                    # OAuth client ID
+--client-secret SECRET            # OAuth client secret
+--scope SCOPES                    # OAuth scopes
+
+# Security options
+--encrypt                         # Encrypt stored credentials
+--auth-debug                      # Debug authentication
+--insecure                        # Skip SSL verification (dev only)
+```
+
+## Best Practices Summary
+
+1. **Use environment variables**: Store credentials as environment variables
+2. **Implement proper rotation**: Regularly rotate credentials
+3. **Monitor and audit**: Track authentication events
+4. **Use least privilege**: Grant minimal required permissions
+5. **Secure storage**: Encrypt sensitive credentials
+6. **Environment isolation**: Separate credentials by environment
+7. **Test authentication**: Regularly validate credentials
+8. **Handle expiry gracefully**: Implement automatic token refresh
+9. **Document auth flows**: Keep authentication documentation current
+10. **Follow provider guidelines**: Adhere to API provider recommendations
+
+## Next Steps
+
+- Learn about [Batch Requests](/advanced/batch-requests) with authentication
+- Explore [GraphQL](/advanced/graphql) authentication patterns
+- Check out [Configuration](/configuration) for auth settings
+- See [Examples](/examples/api-testing-workflow) for authenticated workflows

@@ -1,0 +1,708 @@
+---
+title: Real-World API Examples
+description: "Practical examples with popular APIs and real-world scenarios"
+---
+
+# Real-World API Examples
+
+This page provides practical examples of using ReqSmith with popular real-world APIs, demonstrating common patterns and best practices for various services.
+
+## GitHub API
+
+### Repository Operations
+
+```bash
+# Get repository information
+reqsmith get https://api.github.com/repos/microsoft/vscode \
+  --header "Accept: application/vnd.github.v3+json" \
+  --save-response repo-info.json
+
+# Search repositories
+reqsmith get "https://api.github.com/search/repositories?q=language:javascript+stars:>1000" \
+  --header "Accept: application/vnd.github.v3+json"
+
+# Get repository contributors
+reqsmith get https://api.github.com/repos/microsoft/vscode/contributors \
+  --header "Accept: application/vnd.github.v3+json"
+```
+
+### Issues and Pull Requests
+
+```bash
+# Create an issue
+reqsmith post https://api.github.com/repos/owner/repo/issues \
+  --header "Authorization: Bearer $GITHUB_TOKEN" \
+  --header "Accept: application/vnd.github.v3+json" \
+  --data '{
+    "title": "Bug: API endpoint returns 500",
+    "body": "## Description\nThe `/api/users` endpoint is returning HTTP 500 errors.\n\n## Steps to Reproduce\n1. Call GET /api/users\n2. Observe 500 error\n\n## Expected Behavior\nShould return list of users",
+    "labels": ["bug", "api"],
+    "assignees": ["maintainer"]
+  }'
+
+# List pull requests
+reqsmith get https://api.github.com/repos/microsoft/vscode/pulls \
+  --header "Accept: application/vnd.github.v3+json" \
+  --data "state=open&sort=updated&direction=desc"
+
+# Review a pull request
+reqsmith post https://api.github.com/repos/owner/repo/pulls/123/reviews \
+  --header "Authorization: Bearer $GITHUB_TOKEN" \
+  --data '{
+    "body": "Looks good! Just a few minor suggestions.",
+    "event": "APPROVE"
+  }'
+```
+
+### GitHub Actions
+
+```bash
+# List workflow runs
+reqsmith get https://api.github.com/repos/owner/repo/actions/runs \
+  --header "Authorization: Bearer $GITHUB_TOKEN"
+
+# Trigger workflow dispatch
+reqsmith post https://api.github.com/repos/owner/repo/actions/workflows/deploy.yml/dispatches \
+  --header "Authorization: Bearer $GITHUB_TOKEN" \
+  --data '{
+    "ref": "main",
+    "inputs": {
+      "environment": "production",
+      "version": "v2.1.0"
+    }
+  }'
+
+# Download workflow artifact
+reqsmith get https://api.github.com/repos/owner/repo/actions/artifacts/123/zip \
+  --header "Authorization: Bearer $GITHUB_TOKEN" \
+  --output artifact.zip
+```
+
+## Stripe Payment API
+
+### Customer Management
+
+```bash
+# Create a customer
+reqsmith post https://api.stripe.com/v1/customers \
+  --header "Authorization: Bearer $STRIPE_SECRET_KEY" \
+  --data "name=John Doe&email=john@example.com&description=Customer created via API"
+
+# List customers
+reqsmith get https://api.stripe.com/v1/customers \
+  --header "Authorization: Bearer $STRIPE_SECRET_KEY" \
+  --data "limit=10"
+
+# Update customer
+reqsmith post https://api.stripe.com/v1/customers/cus_customer_id \
+  --header "Authorization: Bearer $STRIPE_SECRET_KEY" \
+  --data "description=Updated customer information"
+```
+
+### Payment Processing
+
+```bash
+# Create payment intent
+reqsmith post https://api.stripe.com/v1/payment_intents \
+  --header "Authorization: Bearer $STRIPE_SECRET_KEY" \
+  --data "amount=2000&currency=usd&customer=cus_customer_id&description=API integration test payment"
+
+# Confirm payment intent
+reqsmith post https://api.stripe.com/v1/payment_intents/pi_payment_intent_id/confirm \
+  --header "Authorization: Bearer $STRIPE_SECRET_KEY" \
+  --data "payment_method=pm_card_visa"
+
+# Retrieve payment intent
+reqsmith get https://api.stripe.com/v1/payment_intents/pi_payment_intent_id \
+  --header "Authorization: Bearer $STRIPE_SECRET_KEY"
+```
+
+### Subscriptions
+
+```bash
+# Create subscription
+reqsmith post https://api.stripe.com/v1/subscriptions \
+  --header "Authorization: Bearer $STRIPE_SECRET_KEY" \
+  --data "customer=cus_customer_id&items[0][price]=price_monthly_plan"
+
+# Update subscription
+reqsmith post https://api.stripe.com/v1/subscriptions/sub_subscription_id \
+  --header "Authorization: Bearer $STRIPE_SECRET_KEY" \
+  --data "items[0][id]=si_item_id&items[0][price]=price_new_plan"
+
+# Cancel subscription
+reqsmith delete https://api.stripe.com/v1/subscriptions/sub_subscription_id \
+  --header "Authorization: Bearer $STRIPE_SECRET_KEY"
+```
+
+## Slack API
+
+### Channel Management
+
+```bash
+# List channels
+reqsmith get https://slack.com/api/conversations.list \
+  --header "Authorization: Bearer $SLACK_BOT_TOKEN" \
+  --data "types=public_channel,private_channel"
+
+# Create channel
+reqsmith post https://slack.com/api/conversations.create \
+  --header "Authorization: Bearer $SLACK_BOT_TOKEN" \
+  --data "name=api-notifications&is_private=false"
+
+# Join channel
+reqsmith post https://slack.com/api/conversations.join \
+  --header "Authorization: Bearer $SLACK_BOT_TOKEN" \
+  --data "channel=C1234567890"
+```
+
+### Messaging
+
+```bash
+# Send message
+reqsmith post https://slack.com/api/chat.postMessage \
+  --header "Authorization: Bearer $SLACK_BOT_TOKEN" \
+  --data '{
+    "channel": "#general",
+    "text": "Deployment completed successfully! 🚀",
+    "blocks": [{
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Deployment Status*\n✅ Production deployment completed\n📅 $(date)\n🔗 <https://app.example.com|View App>"
+      }
+    }]
+  }'
+
+# Upload file
+reqsmith post https://slack.com/api/files.upload \
+  --header "Authorization: Bearer $SLACK_BOT_TOKEN" \
+  --form channels="#general" \
+  --form title="Deployment Logs" \
+  --file file=@deployment.log
+```
+
+### User Management
+
+```bash
+# Get user info
+reqsmith get https://slack.com/api/users.info \
+  --header "Authorization: Bearer $SLACK_BOT_TOKEN" \
+  --data "user=U1234567890"
+
+# List team members
+reqsmith get https://slack.com/api/users.list \
+  --header "Authorization: Bearer $SLACK_BOT_TOKEN"
+
+# Set user status
+reqsmith post https://slack.com/api/users.profile.set \
+  --header "Authorization: Bearer $SLACK_USER_TOKEN" \
+  --data '{
+    "profile": {
+      "status_text": "Working on API integration",
+      "status_emoji": ":computer:"
+    }
+  }'
+```
+
+## Twitter API v2
+
+### Tweet Operations
+
+```bash
+# Create tweet
+reqsmith post https://api.twitter.com/2/tweets \
+  --header "Authorization: Bearer $TWITTER_BEARER_TOKEN" \
+  --data '{
+    "text": "Just deployed a new API feature! 🚀 #API #DevOps"
+  }'
+
+# Get tweet by ID
+reqsmith get "https://api.twitter.com/2/tweets/1234567890?tweet.fields=created_at,author_id,public_metrics" \
+  --header "Authorization: Bearer $TWITTER_BEARER_TOKEN"
+
+# Delete tweet
+reqsmith delete https://api.twitter.com/2/tweets/1234567890 \
+  --header "Authorization: Bearer $TWITTER_BEARER_TOKEN"
+```
+
+### User and Timeline
+
+```bash
+# Get user by username
+reqsmith get "https://api.twitter.com/2/users/by/username/twitter?user.fields=created_at,description,public_metrics" \
+  --header "Authorization: Bearer $TWITTER_BEARER_TOKEN"
+
+# Get user's tweets
+reqsmith get "https://api.twitter.com/2/users/2244994945/tweets?max_results=10&tweet.fields=created_at,public_metrics" \
+  --header "Authorization: Bearer $TWITTER_BEARER_TOKEN"
+
+# Search tweets
+reqsmith get "https://api.twitter.com/2/tweets/search/recent?query=API%20integration&max_results=10" \
+  --header "Authorization: Bearer $TWITTER_BEARER_TOKEN"
+```
+
+## Google Cloud APIs
+
+### Cloud Storage
+
+```bash
+# List buckets
+reqsmith get https://storage.googleapis.com/storage/v1/b \
+  --header "Authorization: Bearer $GOOGLE_ACCESS_TOKEN" \
+  --data "project=my-project-id"
+
+# Upload object
+reqsmith post "https://storage.googleapis.com/upload/storage/v1/b/my-bucket/o?uploadType=media&name=test-file.txt" \
+  --header "Authorization: Bearer $GOOGLE_ACCESS_TOKEN" \
+  --header "Content-Type: text/plain" \
+  --data "Hello from ReqSmith!"
+
+# Get object
+reqsmith get https://storage.googleapis.com/storage/v1/b/my-bucket/o/test-file.txt \
+  --header "Authorization: Bearer $GOOGLE_ACCESS_TOKEN"
+
+# Delete object
+reqsmith delete https://storage.googleapis.com/storage/v1/b/my-bucket/o/test-file.txt \
+  --header "Authorization: Bearer $GOOGLE_ACCESS_TOKEN"
+```
+
+### Google Sheets
+
+```bash
+# Read spreadsheet
+reqsmith get "https://sheets.googleapis.com/v4/spreadsheets/SPREADSHEET_ID/values/Sheet1!A1:E10" \
+  --header "Authorization: Bearer $GOOGLE_ACCESS_TOKEN"
+
+# Write to spreadsheet
+reqsmith put "https://sheets.googleapis.com/v4/spreadsheets/SPREADSHEET_ID/values/Sheet1!A1:B2?valueInputOption=RAW" \
+  --header "Authorization: Bearer $GOOGLE_ACCESS_TOKEN" \
+  --data '{
+    "values": [
+      ["Name", "Email"],
+      ["John Doe", "john@example.com"]
+    ]
+  }'
+
+# Create spreadsheet
+reqsmith post https://sheets.googleapis.com/v4/spreadsheets \
+  --header "Authorization: Bearer $GOOGLE_ACCESS_TOKEN" \
+  --data '{
+    "properties": {
+      "title": "API Data Export"
+    },
+    "sheets": [{
+      "properties": {
+        "title": "Users"
+      }
+    }]
+  }'
+```
+
+## AWS API Gateway
+
+### API Management
+
+```bash
+# List APIs
+reqsmith get https://apigateway.us-east-1.amazonaws.com/restapis \
+  --header "Authorization: AWS4-HMAC-SHA256 ..." \
+  --header "X-Amz-Date: 20241201T120000Z"
+
+# Create API
+reqsmith post https://apigateway.us-east-1.amazonaws.com/restapis \
+  --header "Authorization: AWS4-HMAC-SHA256 ..." \
+  --data '{
+    "name": "user-api",
+    "description": "User management API"
+  }'
+
+# Deploy API
+reqsmith post https://apigateway.us-east-1.amazonaws.com/restapis/api-id/deployments \
+  --header "Authorization: AWS4-HMAC-SHA256 ..." \
+  --data '{
+    "stageName": "prod",
+    "description": "Production deployment"
+  }'
+```
+
+## Discord API
+
+### Guild and Channel Management
+
+```bash
+# Get guild information
+reqsmith get https://discord.com/api/v10/guilds/GUILD_ID \
+  --header "Authorization: Bot $DISCORD_BOT_TOKEN"
+
+# Create channel
+reqsmith post https://discord.com/api/v10/guilds/GUILD_ID/channels \
+  --header "Authorization: Bot $DISCORD_BOT_TOKEN" \
+  --data '{
+    "name": "api-notifications",
+    "type": 0,
+    "topic": "API alerts and notifications"
+  }'
+
+# Send message to channel
+reqsmith post https://discord.com/api/v10/channels/CHANNEL_ID/messages \
+  --header "Authorization: Bot $DISCORD_BOT_TOKEN" \
+  --data '{
+    "content": "🚀 Deployment completed successfully!",
+    "embeds": [{
+      "title": "Deployment Status",
+      "description": "Production deployment completed without errors",
+      "color": 3066993,
+      "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
+    }]
+  }'
+```
+
+## Twilio API
+
+### SMS Operations
+
+```bash
+# Send SMS
+reqsmith post "https://api.twilio.com/2010-04-01/Accounts/$TWILIO_ACCOUNT_SID/Messages.json" \
+  --header "Authorization: Basic $(echo -n $TWILIO_ACCOUNT_SID:$TWILIO_AUTH_TOKEN | base64)" \
+  --data "From=+1234567890&To=+0987654321&Body=API Alert: High response time detected on user service"
+
+# Get message status
+reqsmith get "https://api.twilio.com/2010-04-01/Accounts/$TWILIO_ACCOUNT_SID/Messages/MESSAGE_SID.json" \
+  --header "Authorization: Basic $(echo -n $TWILIO_ACCOUNT_SID:$TWILIO_AUTH_TOKEN | base64)"
+
+# List messages
+reqsmith get "https://api.twilio.com/2010-04-01/Accounts/$TWILIO_ACCOUNT_SID/Messages.json" \
+  --header "Authorization: Basic $(echo -n $TWILIO_ACCOUNT_SID:$TWILIO_AUTH_TOKEN | base64)" \
+  --data "PageSize=20&DateSent>=2024-01-01"
+```
+
+### Voice Operations
+
+```bash
+# Make phone call
+reqsmith post "https://api.twilio.com/2010-04-01/Accounts/$TWILIO_ACCOUNT_SID/Calls.json" \
+  --header "Authorization: Basic $(echo -n $TWILIO_ACCOUNT_SID:$TWILIO_AUTH_TOKEN | base64)" \
+  --data "From=+1234567890&To=+0987654321&Url=http://example.com/voice-alert.xml"
+
+# Get call logs
+reqsmith get "https://api.twilio.com/2010-04-01/Accounts/$TWILIO_ACCOUNT_SID/Calls.json" \
+  --header "Authorization: Basic $(echo -n $TWILIO_ACCOUNT_SID:$TWILIO_AUTH_TOKEN | base64)"
+```
+
+## SendGrid Email API
+
+### Email Operations
+
+```bash
+# Send email
+reqsmith post https://api.sendgrid.com/v3/mail/send \
+  --header "Authorization: Bearer $SENDGRID_API_KEY" \
+  --data '{
+    "personalizations": [{
+      "to": [{"email": "user@example.com", "name": "User Name"}],
+      "subject": "API Deployment Notification"
+    }],
+    "from": {"email": "noreply@company.com", "name": "Company API"},
+    "content": [{
+      "type": "text/html",
+      "value": "<h1>Deployment Complete</h1><p>Your API deployment to production was successful.</p><ul><li>Version: v2.1.0</li><li>Time: '$(date)'</li><li>Status: ✅ Success</li></ul>"
+    }]
+  }'
+
+# Get email statistics
+reqsmith get "https://api.sendgrid.com/v3/stats?start_date=2024-01-01&end_date=2024-01-31" \
+  --header "Authorization: Bearer $SENDGRID_API_KEY"
+
+# Manage unsubscribes
+reqsmith get https://api.sendgrid.com/v3/suppression/unsubscribes \
+  --header "Authorization: Bearer $SENDGRID_API_KEY"
+```
+
+## Jira API
+
+### Issue Management
+
+```bash
+# Create issue
+reqsmith post https://your-domain.atlassian.net/rest/api/3/issue \
+  --header "Authorization: Basic $JIRA_AUTH" \
+  --data '{
+    "fields": {
+      "project": {"key": "API"},
+      "summary": "API endpoint returning 500 errors",
+      "description": {
+        "type": "doc",
+        "version": 1,
+        "content": [{
+          "type": "paragraph",
+          "content": [{
+            "type": "text",
+            "text": "The /api/users endpoint is consistently returning 500 errors since the latest deployment."
+          }]
+        }]
+      },
+      "issuetype": {"name": "Bug"},
+      "priority": {"name": "High"}
+    }
+  }'
+
+# Search issues
+reqsmith get 'https://your-domain.atlassian.net/rest/api/3/search?jql=project=API AND status="In Progress"' \
+  --header "Authorization: Basic $JIRA_AUTH"
+
+# Update issue
+reqsmith put https://your-domain.atlassian.net/rest/api/3/issue/API-123 \
+  --header "Authorization: Basic $JIRA_AUTH" \
+  --data '{
+    "fields": {
+      "summary": "API endpoint 500 errors - RESOLVED",
+      "description": {
+        "type": "doc",
+        "version": 1,
+        "content": [{
+          "type": "paragraph",
+          "content": [{
+            "type": "text",
+            "text": "Issue resolved by fixing database connection pool configuration."
+          }]
+        }]
+      }
+    }
+  }'
+
+# Transition issue
+reqsmith post https://your-domain.atlassian.net/rest/api/3/issue/API-123/transitions \
+  --header "Authorization: Basic $JIRA_AUTH" \
+  --data '{
+    "transition": {"id": "31"}
+  }'
+```
+
+## Shopify API
+
+### Product Management
+
+```bash
+# Get products
+reqsmith get https://your-shop.myshopify.com/admin/api/2023-10/products.json \
+  --header "X-Shopify-Access-Token: $SHOPIFY_ACCESS_TOKEN"
+
+# Create product
+reqsmith post https://your-shop.myshopify.com/admin/api/2023-10/products.json \
+  --header "X-Shopify-Access-Token: $SHOPIFY_ACCESS_TOKEN" \
+  --data '{
+    "product": {
+      "title": "API Integration Test Product",
+      "body_html": "<p>Product created via API</p>",
+      "vendor": "API Store",
+      "product_type": "Digital",
+      "variants": [{
+        "price": "10.00",
+        "inventory_quantity": 100
+      }]
+    }
+  }'
+
+# Update product
+reqsmith put https://your-shop.myshopify.com/admin/api/2023-10/products/PRODUCT_ID.json \
+  --header "X-Shopify-Access-Token: $SHOPIFY_ACCESS_TOKEN" \
+  --data '{
+    "product": {
+      "id": PRODUCT_ID,
+      "title": "Updated Product Title"
+    }
+  }'
+```
+
+### Order Management
+
+```bash
+# Get orders
+reqsmith get https://your-shop.myshopify.com/admin/api/2023-10/orders.json \
+  --header "X-Shopify-Access-Token: $SHOPIFY_ACCESS_TOKEN" \
+  --data "status=any&limit=50"
+
+# Get specific order
+reqsmith get https://your-shop.myshopify.com/admin/api/2023-10/orders/ORDER_ID.json \
+  --header "X-Shopify-Access-Token: $SHOPIFY_ACCESS_TOKEN"
+
+# Fulfill order
+reqsmith post https://your-shop.myshopify.com/admin/api/2023-10/orders/ORDER_ID/fulfillments.json \
+  --header "X-Shopify-Access-Token: $SHOPIFY_ACCESS_TOKEN" \
+  --data '{
+    "fulfillment": {
+      "tracking_number": "1234567890",
+      "tracking_company": "UPS",
+      "notify_customer": true
+    }
+  }'
+```
+
+## Best Practices for Real-World APIs
+
+### 1. Authentication Management
+
+```bash
+# Store API keys securely
+reqsmith config set auth.github.token "$GITHUB_TOKEN" --encrypt
+reqsmith config set auth.stripe.secret "$STRIPE_SECRET_KEY" --encrypt
+reqsmith config set auth.slack.bot_token "$SLACK_BOT_TOKEN" --encrypt
+
+# Use environment-specific credentials
+reqsmith env create production
+reqsmith env set production GITHUB_TOKEN "$PROD_GITHUB_TOKEN" --encrypt
+
+reqsmith env create development  
+reqsmith env set development GITHUB_TOKEN "$DEV_GITHUB_TOKEN" --encrypt
+```
+
+### 2. Rate Limiting
+
+```bash
+# Respect rate limits
+github_api_call() {
+  local endpoint=$1
+  
+  # Check rate limit before making request
+  rate_limit=$(reqsmith get https://api.github.com/rate_limit \
+    --header "Authorization: Bearer $GITHUB_TOKEN" \
+    --format json | jq '.rate.remaining')
+    
+  if [ "$rate_limit" -lt 10 ]; then
+    echo "⚠️  Rate limit low: $rate_limit remaining"
+    sleep 60  # Wait for rate limit reset
+  fi
+  
+  reqsmith get "$endpoint" \
+    --header "Authorization: Bearer $GITHUB_TOKEN"
+}
+```
+
+### 3. Error Handling
+
+```bash
+# Robust error handling for real APIs
+api_call_with_retry() {
+  local url=$1
+  local max_retries=3
+  local retry_count=0
+  
+  while [ $retry_count -lt $max_retries ]; do
+    response=$(reqsmith get "$url" \
+      --header "Authorization: Bearer $API_TOKEN" \
+      --silent \
+      --status-only)
+      
+    case $response in
+      200|201|204)
+        echo "✅ Success: $response"
+        return 0
+        ;;
+      429)
+        echo "⚠️  Rate limited, waiting..."
+        sleep $((2 ** retry_count))  # Exponential backoff
+        ;;
+      5*)
+        echo "❌ Server error: $response, retrying..."
+        sleep 5
+        ;;
+      *)
+        echo "❌ Client error: $response"
+        return 1
+        ;;
+    esac
+    
+    retry_count=$((retry_count + 1))
+  done
+  
+  echo "❌ Max retries exceeded"
+  return 1
+}
+```
+
+### 4. Data Validation
+
+```bash
+# Validate API responses
+validate_github_user() {
+  local username=$1
+  
+  user_data=$(reqsmith get "https://api.github.com/users/$username" \
+    --header "Accept: application/vnd.github.v3+json")
+    
+  # Validate required fields
+  if ! echo "$user_data" | jq -e '.login' > /dev/null; then
+    echo "❌ Invalid user data: missing login field"
+    return 1
+  fi
+  
+  if ! echo "$user_data" | jq -e '.id' > /dev/null; then
+    echo "❌ Invalid user data: missing id field"  
+    return 1
+  fi
+  
+  echo "✅ User data validated for $username"
+  return 0
+}
+```
+
+## Performance Monitoring
+
+### API Performance Tracking
+
+```bash
+# Monitor API performance across services
+monitor_api_performance() {
+  local services=("github.com" "api.stripe.com" "slack.com" "api.twitter.com")
+  
+  for service in "${services[@]}"; do
+    start_time=$(date +%s%N)
+    
+    case $service in
+      "github.com")
+        reqsmith get https://api.github.com/rate_limit \
+          --header "Authorization: Bearer $GITHUB_TOKEN" \
+          --silent > /dev/null
+        ;;
+      "api.stripe.com")
+        reqsmith get https://api.stripe.com/v1/balance \
+          --header "Authorization: Bearer $STRIPE_SECRET_KEY" \
+          --silent > /dev/null
+        ;;
+      "slack.com")
+        reqsmith get https://slack.com/api/auth.test \
+          --header "Authorization: Bearer $SLACK_BOT_TOKEN" \
+          --silent > /dev/null
+        ;;
+    esac
+    
+    end_time=$(date +%s%N)
+    duration_ms=$(( (end_time - start_time) / 1000000 ))
+    
+    echo "$service: ${duration_ms}ms"
+    
+    # Log to monitoring system
+    reqsmith post https://monitoring.company.com/metrics \
+      --data "{
+        \"service\": \"$service\",
+        \"response_time_ms\": $duration_ms,
+        \"timestamp\": $(date +%s)
+      }" > /dev/null
+  done
+}
+
+# Run monitoring every 5 minutes
+while true; do
+  monitor_api_performance
+  sleep 300
+done
+```
+
+## Next Steps
+
+- Create [Templates](/cli/template) for frequently used API patterns
+- Set up [Environments](/cli/env) for different API stages (dev, staging, prod)
+- Use [History](/cli/history) to track and analyze API usage patterns
+- Implement [Batch Operations](/advanced/batch-requests) for bulk API processing

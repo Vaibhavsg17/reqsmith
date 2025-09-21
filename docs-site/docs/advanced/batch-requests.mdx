@@ -1,0 +1,762 @@
+---
+title: Batch Requests
+description: "Execute multiple API requests efficiently with batch processing and parallel execution"
+---
+
+# Batch Requests
+
+ReqSmith supports efficient batch processing of multiple API requests, enabling you to execute hundreds or thousands of requests with optimal performance, error handling, and result aggregation.
+
+## What are Batch Requests?
+
+Batch requests allow you to:
+- **Execute multiple requests**: Run many API calls in sequence or parallel
+- **Process datasets**: Apply API operations to large datasets
+- **Load testing**: Send high-volume requests to test API performance
+- **Data migration**: Bulk operations for data synchronization
+- **Automated workflows**: Chain multiple API operations together
+
+## Basic Batch Operations
+
+### Simple Batch Execution
+
+Execute the same request with different parameters:
+
+```bash
+# Batch requests with parameter variation
+reqsmith batch \
+  --template github-user \
+  --params username=octocat,torvalds,gaearon \
+  --parallel 3
+
+# Batch with parameter file
+reqsmith batch \
+  --template api-endpoint \
+  --params-file users.csv \
+  --parallel 5
+```
+
+### Parameter Files
+
+Create parameter files for batch operations:
+
+```csv
+# users.csv
+username,repo
+octocat,Hello-World
+torvalds,linux
+gaearon,redux
+```
+
+```json
+// users.json
+[
+  {"username": "octocat", "repo": "Hello-World"},
+  {"username": "torvalds", "repo": "linux"},
+  {"username": "gaearon", "repo": "redux"}
+]
+```
+
+```yaml
+# users.yaml
+- username: octocat
+  repo: Hello-World
+- username: torvalds
+  repo: linux
+- username: gaearon
+  repo: redux
+```
+
+## Batch Configuration
+
+### Concurrency Control
+
+Configure parallel execution:
+
+```bash
+# Set number of parallel requests
+reqsmith batch --parallel 10 --template user-api --params-file data.csv
+
+# Set concurrency based on system resources
+reqsmith batch --auto-parallel --template user-api --params-file data.csv
+
+# Limit by rate (requests per second)
+reqsmith batch --rate-limit 5 --template user-api --params-file data.csv
+
+# Combine limits
+reqsmith batch \
+  --parallel 8 \
+  --rate-limit 10 \
+  --template user-api \
+  --params-file data.csv
+```
+
+### Retry Configuration
+
+Handle failures with retry logic:
+
+```bash
+# Enable retries
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --retry-attempts 3 \
+  --retry-delay 1000 \
+  --retry-exponential
+
+# Retry only specific errors
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --retry-on-status 429,500,502,503,504
+
+# Custom retry strategy
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --retry-strategy "exponential" \
+  --retry-max-delay 30000
+```
+
+### Timeout Settings
+
+Configure timeouts for batch operations:
+
+```bash
+# Set request timeout
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --timeout 30000
+
+# Set total batch timeout
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --batch-timeout 3600000
+
+# Connection timeout
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --connect-timeout 5000
+```
+
+## Advanced Batch Features
+
+### Conditional Execution
+
+Execute requests based on conditions:
+
+```bash
+# Skip requests based on previous results
+reqsmith batch \
+  --template user-check \
+  --params-file users.csv \
+  --skip-if "status != 200" \
+  --continue-on-error
+
+# Execute only if condition met
+reqsmith batch \
+  --template user-update \
+  --params-file users.csv \
+  --execute-if "response.active == true"
+```
+
+### Result Filtering
+
+Filter and process results:
+
+```bash
+# Filter successful responses only
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --filter-success
+
+# Extract specific fields from responses
+reqsmith batch \
+  --template user-api \
+  --params-file users.csv \
+  --extract "id,name,email" \
+  --output results.csv
+
+# Custom result processing
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --transform "response.data" \
+  --output processed.json
+```
+
+### Progress Monitoring
+
+Monitor batch execution progress:
+
+```bash
+# Show progress bar
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --progress
+
+# Detailed progress with statistics
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --progress-detailed
+
+# Save progress to file
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --progress-file progress.log
+```
+
+## Batch Templates
+
+### Creating Batch Templates
+
+Design templates optimized for batch processing:
+
+```yaml
+# batch-user-template.yaml
+name: batch-user-operations
+description: Batch operations for user management
+batch:
+  enabled: true
+  parallel: 5
+  retry_attempts: 3
+  rate_limit: 10
+
+requests:
+  - name: get-user
+    method: GET
+    url: "https://api.example.com/users/{{user_id}}"
+    batch:
+      required_params: ["user_id"]
+      skip_if: "user_id == null"
+    
+  - name: update-user
+    method: PUT
+    url: "https://api.example.com/users/{{user_id}}"
+    headers:
+      Content-Type: application/json
+    body: |
+      {
+        "name": "{{name}}",
+        "email": "{{email}}"
+      }
+    batch:
+      required_params: ["user_id", "name", "email"]
+      execute_if: "get-user.status == 200"
+```
+
+### Batch-Specific Features
+
+Use batch-specific template features:
+
+```yaml
+# Advanced batch template
+name: data-processing-batch
+description: Process large datasets efficiently
+
+batch:
+  enabled: true
+  chunk_size: 100          # Process in chunks
+  parallel_chunks: 3       # Parallel chunk processing
+  pause_between_chunks: 1000  # Pause between chunks (ms)
+  
+requests:
+  - name: process-item
+    method: POST
+    url: "https://api.example.com/process"
+    body: "{{item}}"
+    batch:
+      aggregate_results: true
+      error_handling: "continue"
+      timeout: 30000
+```
+
+## Result Aggregation
+
+### Collecting Results
+
+Aggregate results from batch operations:
+
+```bash
+# Collect all results in single file
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --output-format json \
+  --output batch-results.json
+
+# Separate successful and failed results
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --output-success success.json \
+  --output-errors errors.json
+
+# Statistical summary
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --statistics \
+  --summary summary.txt
+```
+
+### Result Formats
+
+Support for multiple output formats:
+
+```bash
+# JSON format (default)
+reqsmith batch --output results.json
+
+# CSV format for tabular data
+reqsmith batch --output results.csv --format csv
+
+# Excel format with multiple sheets
+reqsmith batch --output results.xlsx --format excel
+
+# XML format
+reqsmith batch --output results.xml --format xml
+
+# Custom format with template
+reqsmith batch --output results.html --format-template report.html
+```
+
+### Result Processing
+
+Process results during or after batch execution:
+
+```bash
+# Real-time result processing
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --process-results \
+  --processor "validate_response"
+
+# Post-processing with custom script
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --output raw-results.json \
+  --post-process "python process_results.py"
+```
+
+## Performance Optimization
+
+### Resource Management
+
+Optimize resource usage for large batches:
+
+```bash
+# Memory optimization for large datasets
+reqsmith batch \
+  --template api-endpoint \
+  --params-file large-data.csv \
+  --memory-efficient \
+  --chunk-size 1000 \
+  --stream-results
+
+# CPU optimization
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --parallel-auto \
+  --cpu-limit 80
+
+# Network optimization
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --connection-pool 20 \
+  --keep-alive \
+  --compression
+```
+
+### Caching for Batches
+
+Leverage caching for repeated operations:
+
+```bash
+# Enable caching for batch operations
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --cache-enabled \
+  --cache-ttl 3600
+
+# Cache-first strategy for read operations
+reqsmith batch \
+  --template get-users \
+  --params-file users.csv \
+  --cache-strategy cache-first
+
+# Warm cache before batch execution
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --warm-cache \
+  --cache-preload 100
+```
+
+## Error Handling
+
+### Error Strategies
+
+Different approaches to handling errors:
+
+```bash
+# Stop on first error (default)
+reqsmith batch --template api-endpoint --params-file data.csv --stop-on-error
+
+# Continue on errors
+reqsmith batch --template api-endpoint --params-file data.csv --continue-on-error
+
+# Fail-fast for critical errors only
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --fail-fast-on 401,403 \
+  --continue-on 429,500
+
+# Custom error handling
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --error-handler "custom_handler.py"
+```
+
+### Error Recovery
+
+Recover from failures:
+
+```bash
+# Resume failed batch from checkpoint
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --resume-from checkpoint.json
+
+# Retry failed items only
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --retry-failed errors.json
+
+# Partial execution with exclusions
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --exclude-params failed-params.csv
+```
+
+### Error Analysis
+
+Analyze batch errors:
+
+```bash
+# Generate error report
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --error-report errors-report.html
+
+# Error statistics
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --error-stats
+
+# Error patterns analysis
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --analyze-errors
+```
+
+## Batch Monitoring
+
+### Real-time Monitoring
+
+Monitor batch execution in real-time:
+
+```bash
+# Live dashboard
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --monitor-live
+
+# Progress with metrics
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --progress-metrics \
+  --refresh-interval 5000
+
+# Web-based monitoring
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --web-monitor \
+  --monitor-port 8080
+```
+
+### Metrics and Logging
+
+Collect detailed metrics:
+
+```bash
+# Enable detailed metrics
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --metrics-enabled \
+  --metrics-file metrics.json
+
+# Performance profiling
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --profile \
+  --profile-output profile.html
+
+# Custom logging
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --log-level debug \
+  --log-file batch.log
+```
+
+## Distributed Batch Processing
+
+### Multi-node Execution
+
+Scale batch processing across multiple machines:
+
+```bash
+# Distribute batch across nodes
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --distributed \
+  --nodes "node1:8080,node2:8080,node3:8080"
+
+# Worker node configuration
+reqsmith batch-worker \
+  --port 8080 \
+  --capacity 10 \
+  --resource-limit "cpu:80,memory:70"
+
+# Coordinator setup
+reqsmith batch-coordinator \
+  --port 9090 \
+  --workers "worker1:8080,worker2:8080"
+```
+
+### Cloud Integration
+
+Use cloud services for large-scale batches:
+
+```bash
+# AWS Batch integration
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --aws-batch \
+  --job-queue "reqsmith-batch" \
+  --job-definition "reqsmith-job"
+
+# Kubernetes job
+reqsmith batch \
+  --template api-endpoint \
+  --params-file data.csv \
+  --kubernetes \
+  --namespace "reqsmith" \
+  --replicas 5
+```
+
+## Batch Examples
+
+### Load Testing
+
+Use batches for load testing:
+
+```bash
+# Stress test API endpoint
+reqsmith batch \
+  --template load-test \
+  --repeat 1000 \
+  --parallel 50 \
+  --rate-limit 100 \
+  --metrics-enabled
+
+# Gradual load increase
+reqsmith batch \
+  --template load-test \
+  --ramp-up \
+  --start-rate 1 \
+  --end-rate 100 \
+  --duration 300
+```
+
+### Data Migration
+
+Migrate data between systems:
+
+```bash
+# Export data from source API
+reqsmith batch \
+  --template export-users \
+  --params-file user-ids.csv \
+  --output exported-users.json
+
+# Import data to target API
+reqsmith batch \
+  --template import-users \
+  --params-file exported-users.json \
+  --parallel 5 \
+  --retry-attempts 3
+```
+
+### Monitoring and Health Checks
+
+Batch health checks across services:
+
+```bash
+# Health check all services
+reqsmith batch \
+  --template health-check \
+  --params-file services.csv \
+  --parallel 10 \
+  --output health-status.json
+
+# Scheduled monitoring
+reqsmith batch \
+  --template monitor-endpoints \
+  --params-file endpoints.csv \
+  --schedule "*/5 * * * *" \
+  --alert-on-failure
+```
+
+## Command Reference
+
+### Core Batch Commands
+
+```bash
+# Basic batch execution
+reqsmith batch [options]
+
+# Batch with template
+reqsmith batch --template TEMPLATE [options]
+
+# Batch with parameters
+reqsmith batch --params-file FILE [options]
+
+# Resume batch execution
+reqsmith batch --resume CHECKPOINT [options]
+
+# Batch worker node
+reqsmith batch-worker [options]
+
+# Batch coordinator
+reqsmith batch-coordinator [options]
+```
+
+### Batch Options
+
+```bash
+# Execution control
+--parallel N                    # Number of parallel requests
+--rate-limit N                  # Requests per second limit
+--timeout N                     # Request timeout (ms)
+--batch-timeout N               # Total batch timeout (ms)
+
+# Data sources
+--params-file FILE              # Parameter file (CSV, JSON, YAML)
+--params LIST                   # Inline parameters
+--repeat N                      # Repeat same request N times
+
+# Error handling
+--retry-attempts N              # Number of retry attempts
+--retry-delay N                 # Delay between retries (ms)
+--continue-on-error             # Don't stop on errors
+--stop-on-error                 # Stop on first error (default)
+
+# Output control
+--output FILE                   # Output file
+--format FORMAT                 # Output format (json, csv, excel)
+--output-success FILE           # Successful results file
+--output-errors FILE            # Error results file
+
+# Monitoring
+--progress                      # Show progress bar
+--metrics-enabled               # Collect metrics
+--log-level LEVEL               # Logging level
+--monitor-live                  # Live monitoring dashboard
+
+# Performance
+--memory-efficient              # Memory optimization
+--chunk-size N                  # Process in chunks
+--cache-enabled                 # Enable caching
+--connection-pool N             # Connection pool size
+
+# Advanced
+--distributed                   # Distributed execution
+--resume-from FILE              # Resume from checkpoint
+--filter-success                # Filter successful responses only
+--extract FIELDS                # Extract specific fields
+```
+
+## Best Practices
+
+1. **Start small**: Test with small batches before scaling up
+2. **Monitor resources**: Watch CPU, memory, and network usage
+3. **Use appropriate concurrency**: Don't overwhelm target APIs
+4. **Implement retry logic**: Handle temporary failures gracefully
+5. **Cache repeated requests**: Use caching for identical requests
+6. **Process in chunks**: Break large datasets into manageable chunks
+7. **Monitor progress**: Use progress tracking for long-running batches
+8. **Handle errors gracefully**: Plan for partial failures
+9. **Respect rate limits**: Follow API rate limiting guidelines
+10. **Clean up resources**: Properly close connections and free memory
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Out of memory**: Use memory-efficient mode and chunking
+2. **Rate limiting**: Reduce concurrency and add delays
+3. **Connection errors**: Increase connection pool and retry attempts
+4. **Timeout errors**: Increase timeout values
+5. **Partial failures**: Use continue-on-error and retry failed items
+
+### Debug Batch Operations
+
+```bash
+# Enable debug logging
+reqsmith batch --log-level debug --template api-endpoint --params-file data.csv
+
+# Dry run mode
+reqsmith batch --dry-run --template api-endpoint --params-file data.csv
+
+# Validate parameters
+reqsmith batch --validate-only --template api-endpoint --params-file data.csv
+
+# Performance profiling
+reqsmith batch --profile --template api-endpoint --params-file data.csv
+```
+
+## Next Steps
+
+- Learn about [GraphQL](/advanced/graphql) for batch GraphQL operations
+- Explore [Authentication](/advanced/authentication) for batch requests with auth
+- Check out [Troubleshooting](/advanced/troubleshooting) for batch debugging
+- See [Examples](/examples/api-testing-workflow) for batch testing workflows

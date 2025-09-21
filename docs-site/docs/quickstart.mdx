@@ -1,0 +1,287 @@
+---
+title: Quick Start
+description: "Get started with ReqSmith in minutes"
+---
+
+---
+title: Quick Start
+description: "Get started with ReqSmith in minutes"
+---
+
+# Quick Start
+
+This guide will help you make your first API request with ReqSmith and explore its core features.
+
+:::tip 🤖 Want AI-powered assistance?
+ReqSmith includes powerful AI features that can analyze APIs, suggest optimal requests, and help debug issues. [Set up AI features in 2 minutes →](/concepts/ai-features)
+:::
+
+## Your First Request
+
+Let's start with a simple GET request to test that ReqSmith is working:
+
+```bash
+reqsmith request get https://httpbin.org/get
+```
+
+This will:
+- Make a GET request to httpbin.org
+- Display the response with syntax highlighting
+- Automatically add the request to your history
+
+## AI-Powered Request Suggestions
+
+Once you have AI set up, get intelligent suggestions for any API:
+
+```bash
+# Get AI suggestions for an API
+reqsmith ai suggest --url https://api.github.com
+
+# Analyze your last response with AI
+reqsmith ai analyze
+```
+
+## Basic Request Types
+
+ReqSmith supports all common HTTP methods:
+
+### GET Request
+```bash
+reqsmith request get https://api.github.com/users/octocat
+```
+
+### POST Request with JSON
+```bash
+reqsmith request post https://httpbin.org/post \
+  --json '{"name": "John", "email": "john@example.com"}'
+```
+
+### POST Request with Data
+```bash
+reqsmith request post https://httpbin.org/post \
+  --data "name=John&email=john@example.com"
+```
+
+### Request with Headers
+```bash
+reqsmith request get https://api.github.com/user \
+  --header "Authorization: Bearer YOUR_TOKEN" \
+  --header "Accept: application/vnd.github.v3+json"
+```
+
+### Request with Query Parameters
+```bash
+reqsmith request get https://httpbin.org/get \
+  --param "page=1" \
+  --param "limit=10"
+```
+
+## Working with Templates
+
+Templates let you save and reuse request configurations:
+
+### Save a Template
+```bash
+reqsmith template save github-user \
+  --method GET \
+  --url "https://api.github.com/users/${USERNAME}" \
+  --header "Accept: application/vnd.github.v3+json" \
+  --description "Get GitHub user information"
+```
+
+### Use a Template
+```bash
+reqsmith template use github-user --var USERNAME=octocat
+```
+
+### List Your Templates
+```bash
+reqsmith template list
+```
+
+## Environment Management
+
+Environments help manage different configurations (dev, staging, prod):
+
+### Create an Environment
+```bash
+reqsmith env create development
+```
+
+### Set Environment Variables
+```bash
+reqsmith env set API_BASE_URL "https://api.dev.example.com"
+reqsmith env set API_TOKEN "dev-token-123"
+```
+
+### Switch Environment
+```bash
+reqsmith env switch development
+```
+
+### Use Environment in Template
+```bash
+reqsmith template save api-endpoint \
+  --method GET \
+  --url "${API_BASE_URL}/users" \
+  --header "Authorization: Bearer ${API_TOKEN}"
+
+reqsmith template use api-endpoint --env development
+```
+
+## Request History
+
+ReqSmith automatically tracks all your requests:
+
+### View Recent Requests
+```bash
+reqsmith history list --limit 10
+```
+
+### Search History
+```bash
+reqsmith history search "github.com"
+```
+
+### Retry a Failed Request
+```bash
+reqsmith history retry --failed
+```
+
+### View Request Statistics
+```bash
+reqsmith history stats
+```
+
+## Response Formatting
+
+Control how responses are displayed:
+
+### JSON Format (Default)
+```bash
+reqsmith request get https://httpbin.org/json
+```
+
+### Table Format
+```bash
+reqsmith request get https://httpbin.org/json --format table
+```
+
+### Raw Format
+```bash
+reqsmith request get https://httpbin.org/html --format raw
+```
+
+### Save Response to File
+```bash
+reqsmith request get https://httpbin.org/json --output response.json
+```
+
+## Configuration
+
+Check your current configuration:
+
+```bash
+reqsmith config show
+```
+
+Common configuration options:
+
+```bash
+# Set default output format
+reqsmith config set output.default_format table
+
+# Set request timeout
+reqsmith config set network.timeout_seconds 30
+
+# Enable caching
+reqsmith config set cache.enabled true
+```
+
+## GraphQL Support
+
+ReqSmith supports GraphQL queries:
+
+```bash
+reqsmith request graphql https://api.github.com/graphql \
+  --query 'query { viewer { login name } }' \
+  --header "Authorization: Bearer YOUR_TOKEN"
+```
+
+## Getting Help
+
+ReqSmith has comprehensive built-in help:
+
+```bash
+# General help
+reqsmith help
+
+# Command-specific help
+reqsmith request --help
+reqsmith template --help
+
+# Getting started guide
+reqsmith help getting-started
+
+# View examples
+reqsmith help examples
+
+# Tips and tricks
+reqsmith help tips
+```
+
+## Next Steps
+
+Now that you've mastered the basics:
+
+1. **Learn about [Templates](/concepts/templates)** - Create reusable request configurations
+2. **Explore [Environments](/concepts/environments)** - Manage different deployment environments
+3. **Set up [AI Features](/concepts/ai-features)** - Get intelligent suggestions and validation
+4. **Check out [Examples](/examples/basic-requests)** - See ReqSmith in action with real APIs
+
+## Common Workflows
+
+### API Testing Workflow
+```bash
+# 1. Create environment
+reqsmith env create testing
+reqsmith env set API_BASE_URL "https://api.example.com"
+reqsmith env set API_TOKEN "test-token"
+
+# 2. Create templates
+reqsmith template save list-users \
+  --method GET \
+  --url "${API_BASE_URL}/users"
+
+reqsmith template save create-user \
+  --method POST \
+  --url "${API_BASE_URL}/users" \
+  --json '{"name": "${NAME}", "email": "${EMAIL}"}'
+
+# 3. Run tests
+reqsmith template use list-users --env testing
+reqsmith template use create-user --env testing \
+  --var NAME="Test User" \
+  --var EMAIL="test@example.com"
+
+# 4. Check results
+reqsmith history stats
+```
+
+### Development Workflow
+```bash
+# Set up development environment
+reqsmith env create dev
+reqsmith env set API_BASE_URL "http://localhost:3000/api"
+
+# Test local API
+reqsmith request get "${API_BASE_URL}/health" --env dev
+
+# Save common endpoints
+reqsmith template save local-health \
+  --method GET \
+  --url "${API_BASE_URL}/health" \
+  --description "Health check for local API"
+```
+
+Ready to dive deeper? Explore the [core concepts](/concepts/requests) or check out more [advanced examples](/examples/api-testing-workflow)!

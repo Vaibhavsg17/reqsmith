@@ -1,0 +1,838 @@
+---
+title: Troubleshooting
+description: "Diagnose and resolve common issues when using ReqSmith for API testing"
+---
+
+# Troubleshooting
+
+This comprehensive guide helps you diagnose and resolve common issues when using ReqSmith, from connection problems to advanced debugging techniques.
+
+## Quick Diagnostics
+
+### Health Check
+
+Start with a basic health check:
+
+```bash
+# Check ReqSmith installation and configuration
+reqsmith doctor
+
+# Detailed system information
+reqsmith doctor --verbose
+
+# Check specific components
+reqsmith doctor --check-networking
+reqsmith doctor --check-auth
+reqsmith doctor --check-cache
+```
+
+### Version Information
+
+Verify your ReqSmith version:
+
+```bash
+# Show version information
+reqsmith --version
+
+# Show detailed version info
+reqsmith version --detailed
+
+# Check for updates
+reqsmith version --check-updates
+```
+
+## Common Issues
+
+### Connection Problems
+
+#### Issue: Cannot connect to API endpoint
+
+**Symptoms:**
+- `Connection refused` errors
+- `Name resolution failed` errors
+- `Timeout` errors
+
+**Solutions:**
+
+```bash
+# Test basic connectivity
+reqsmith get https://httpbin.org/get
+
+# Check with verbose output
+reqsmith get https://api.example.com/health --verbose
+
+# Test DNS resolution
+reqsmith diagnose dns api.example.com
+
+# Check proxy settings
+reqsmith config show --section network
+
+# Bypass proxy temporarily
+reqsmith get https://api.example.com/health --no-proxy
+
+# Test with custom timeout
+reqsmith get https://api.example.com/health --timeout 30000
+```
+
+#### Issue: SSL/TLS certificate errors
+
+**Symptoms:**
+- `SSL verification failed`
+- `Certificate verify failed`
+- `Hostname doesn't match`
+
+**Solutions:**
+
+```bash
+# Check certificate details
+reqsmith diagnose ssl https://api.example.com
+
+# Temporarily skip verification (development only)
+reqsmith get https://api.example.com/data --insecure
+
+# Use custom CA bundle
+reqsmith get https://api.example.com/data --ca-bundle custom-ca.pem
+
+# Configure certificate verification
+reqsmith config set network.verify_ssl true
+reqsmith config set network.ca_bundle_path "/path/to/ca-bundle.pem"
+```
+
+### Authentication Issues
+
+#### Issue: 401 Unauthorized errors
+
+**Symptoms:**
+- `401 Unauthorized` responses
+- `Invalid credentials` messages
+- `Token expired` errors
+
+**Solutions:**
+
+```bash
+# Test authentication
+reqsmith auth test --name your-auth
+
+# Debug auth headers
+reqsmith get https://api.example.com/data --auth-debug
+
+# Check token expiry
+reqsmith auth check-expiry --token "your-token"
+
+# Refresh expired token
+reqsmith auth refresh your-provider
+
+# Validate stored credentials
+reqsmith auth validate --name your-auth
+```
+
+#### Issue: OAuth flow problems
+
+**Symptoms:**
+- OAuth callback errors
+- `Invalid grant` errors
+- Token refresh failures
+
+**Solutions:**
+
+```bash
+# Test OAuth configuration
+reqsmith auth oauth-test --provider github
+
+# Check OAuth provider settings
+reqsmith auth provider-info github
+
+# Reset OAuth flow
+reqsmith auth reset-oauth github
+
+# Debug OAuth flow
+reqsmith auth oauth --provider github --debug
+```
+
+### Template Issues
+
+#### Issue: Template execution fails
+
+**Symptoms:**
+- `Template not found` errors
+- Variable substitution failures
+- Request dependency errors
+
+**Solutions:**
+
+```bash
+# Validate template syntax
+reqsmith template validate my-template
+
+# Check template variables
+reqsmith template variables my-template
+
+# Test with dry run
+reqsmith template run my-template --dry-run
+
+# Debug variable substitution
+reqsmith template run my-template --debug-variables
+
+# Check template dependencies
+reqsmith template dependencies my-template
+```
+
+#### Issue: Variable substitution not working
+
+**Symptoms:**
+- Variables appear as `{{variable}}` in requests
+- `Undefined variable` errors
+- Incorrect variable values
+
+**Solutions:**
+
+```bash
+# List available variables
+reqsmith template variables my-template
+
+# Check environment variables
+reqsmith env show current
+
+# Debug variable resolution
+reqsmith template run my-template --explain-variables
+
+# Set missing variables
+reqsmith template run my-template --var key=value
+
+# Check variable scope
+reqsmith config show --section variables
+```
+
+### Performance Issues
+
+#### Issue: Slow response times
+
+**Symptoms:**
+- Requests taking too long
+- Timeout errors
+- Poor performance
+
+**Solutions:**
+
+```bash
+# Enable performance metrics
+reqsmith get https://api.example.com/data --metrics
+
+# Check network performance
+reqsmith diagnose network-performance https://api.example.com
+
+# Optimize connection settings
+reqsmith config set network.connection_pool_size 20
+reqsmith config set network.keep_alive true
+
+# Use caching for repeated requests
+reqsmith get https://api.example.com/data --cache-enabled
+
+# Profile request execution
+reqsmith get https://api.example.com/data --profile
+```
+
+#### Issue: Memory usage problems
+
+**Symptoms:**
+- High memory consumption
+- Out of memory errors
+- System slowdown
+
+**Solutions:**
+
+```bash
+# Check memory usage
+reqsmith diagnose memory
+
+# Enable memory-efficient mode
+reqsmith config set performance.memory_efficient true
+
+# Limit cache size
+reqsmith config set cache.memory_size_mb 50
+
+# Clear cache
+reqsmith cache clear
+
+# Use streaming for large responses
+reqsmith get https://api.example.com/large-data --stream
+```
+
+### Cache Issues
+
+#### Issue: Cache not working
+
+**Symptoms:**
+- Responses not cached
+- Cache misses
+- Stale data
+
+**Solutions:**
+
+```bash
+# Check cache status
+reqsmith cache stats
+
+# Validate cache configuration
+reqsmith config show --section cache
+
+# Test cache functionality
+reqsmith get https://api.example.com/data --cache-debug
+
+# Clear and rebuild cache
+reqsmith cache clear
+reqsmith get https://api.example.com/data --cache-enabled
+
+# Check cache permissions
+reqsmith diagnose cache-permissions
+```
+
+#### Issue: Cache corruption
+
+**Symptoms:**
+- Invalid cache entries
+- Cache errors
+- Data corruption warnings
+
+**Solutions:**
+
+```bash
+# Validate cache integrity
+reqsmith cache validate
+
+# Repair corrupted cache
+reqsmith cache repair
+
+# Clear corrupted cache
+reqsmith cache clear --force
+
+# Rebuild cache database
+reqsmith cache rebuild
+
+# Check disk space
+reqsmith diagnose disk-space
+```
+
+## Advanced Debugging
+
+### Enable Debug Mode
+
+Get detailed debugging information:
+
+```bash
+# Enable global debug mode
+reqsmith config set debug.enabled true
+
+# Debug specific components
+reqsmith config set debug.http true
+reqsmith config set debug.auth true
+reqsmith config set debug.cache true
+reqsmith config set debug.templates true
+
+# Set debug log level
+reqsmith config set debug.log_level debug
+
+# Debug output to file
+reqsmith config set debug.log_file reqsmith-debug.log
+```
+
+### Verbose Output
+
+Use verbose flags for detailed information:
+
+```bash
+# Verbose request execution
+reqsmith get https://api.example.com/data --verbose
+
+# Very verbose (maximum detail)
+reqsmith get https://api.example.com/data -vv
+
+# Explain what's happening
+reqsmith get https://api.example.com/data --explain
+
+# Show request/response details
+reqsmith get https://api.example.com/data --show-headers --show-body
+```
+
+### Network Diagnostics
+
+#### Trace Network Issues
+
+```bash
+# Trace network path
+reqsmith diagnose traceroute api.example.com
+
+# Test DNS resolution
+reqsmith diagnose dns api.example.com
+
+# Check port connectivity
+reqsmith diagnose port api.example.com 443
+
+# Test with different DNS servers
+reqsmith diagnose dns api.example.com --dns-server 8.8.8.8
+
+# Network interface information
+reqsmith diagnose network-interfaces
+```
+
+#### Analyze HTTP Traffic
+
+```bash
+# Capture HTTP traffic
+reqsmith get https://api.example.com/data --capture-traffic traffic.har
+
+# Analyze request/response headers
+reqsmith get https://api.example.com/data --analyze-headers
+
+# Check HTTP/2 support
+reqsmith get https://api.example.com/data --http2-debug
+
+# Monitor redirects
+reqsmith get https://api.example.com/redirect --follow-redirects --trace-redirects
+```
+
+### Performance Profiling
+
+#### Profile Request Execution
+
+```bash
+# Profile single request
+reqsmith get https://api.example.com/data --profile
+
+# Profile template execution
+reqsmith template run my-template --profile
+
+# Detailed performance metrics
+reqsmith get https://api.example.com/data --metrics --profile-detailed
+
+# Compare performance
+reqsmith compare-performance \
+  --url1 https://api1.example.com/data \
+  --url2 https://api2.example.com/data
+```
+
+#### Memory Profiling
+
+```bash
+# Monitor memory usage
+reqsmith get https://api.example.com/data --memory-profile
+
+# Memory usage over time
+reqsmith memory-monitor --duration 60 --interval 5
+
+# Detect memory leaks
+reqsmith diagnose memory-leaks --template batch-template
+```
+
+### Configuration Debugging
+
+#### Validate Configuration
+
+```bash
+# Check configuration validity
+reqsmith config validate
+
+# Show effective configuration
+reqsmith config show --effective
+
+# Find configuration conflicts
+reqsmith config conflicts
+
+# Reset to defaults
+reqsmith config reset --section network
+
+# Export configuration for analysis
+reqsmith config export debug-config.yaml
+```
+
+#### Environment Debugging
+
+```bash
+# Check environment variables
+reqsmith env validate
+
+# Show environment resolution
+reqsmith env show --resolve-variables
+
+# Debug environment switching
+reqsmith env switch production --debug
+
+# Compare environments
+reqsmith env compare development production
+```
+
+## Error Analysis
+
+### Log Analysis
+
+#### Analyze ReqSmith Logs
+
+```bash
+# Show recent logs
+reqsmith logs show
+
+# Filter logs by level
+reqsmith logs show --level error
+
+# Filter logs by component
+reqsmith logs show --component http
+
+# Search logs
+reqsmith logs search "connection refused"
+
+# Export logs for analysis
+reqsmith logs export logs.json --since "24 hours ago"
+```
+
+#### Error Patterns
+
+```bash
+# Analyze error patterns
+reqsmith analyze errors --logs logs.json
+
+# Group errors by type
+reqsmith analyze errors --group-by status_code
+
+# Find error trends
+reqsmith analyze errors --trends --days 7
+
+# Generate error report
+reqsmith analyze errors --report error-analysis.html
+```
+
+### Request/Response Analysis
+
+#### Analyze Failed Requests
+
+```bash
+# Show failed requests
+reqsmith history list --failed
+
+# Analyze failure patterns
+reqsmith history analyze --failures
+
+# Get failure statistics
+reqsmith history stats --failures
+
+# Export failed requests for analysis
+reqsmith history export failures.json --failed-only
+```
+
+#### Response Validation
+
+```bash
+# Validate response format
+reqsmith validate response response.json --schema schema.json
+
+# Check response headers
+reqsmith validate headers response.json --expected headers.json
+
+# Validate response time
+reqsmith validate performance response.json --max-time 2000
+```
+
+## System Diagnostics
+
+### Environment Check
+
+#### System Requirements
+
+```bash
+# Check system requirements
+reqsmith diagnose system-requirements
+
+# Check Python environment
+reqsmith diagnose python-environment
+
+# Check dependencies
+reqsmith diagnose dependencies
+
+# Check disk space
+reqsmith diagnose disk-space --path ~/.reqsmith
+```
+
+#### Network Environment
+
+```bash
+# Check network configuration
+reqsmith diagnose network-config
+
+# Test internet connectivity
+reqsmith diagnose connectivity
+
+# Check proxy configuration
+reqsmith diagnose proxy
+
+# Test DNS resolution
+reqsmith diagnose dns-config
+```
+
+### File System Issues
+
+#### Permission Problems
+
+```bash
+# Check file permissions
+reqsmith diagnose permissions
+
+# Fix permission issues
+reqsmith fix permissions
+
+# Check cache directory permissions
+reqsmith diagnose cache-permissions
+
+# Check config directory permissions
+reqsmith diagnose config-permissions
+```
+
+#### Storage Issues
+
+```bash
+# Check available disk space
+reqsmith diagnose disk-space
+
+# Clean up temporary files
+reqsmith cleanup temp-files
+
+# Optimize storage usage
+reqsmith optimize storage
+
+# Check file system integrity
+reqsmith diagnose filesystem
+```
+
+## Getting Help
+
+### Documentation and Resources
+
+```bash
+# Get help for specific command
+reqsmith help get
+
+# Show examples
+reqsmith examples
+
+# Show command reference
+reqsmith reference
+
+# Open documentation
+reqsmith docs open
+
+# Show FAQ
+reqsmith faq
+```
+
+### Community Support
+
+```bash
+# Generate support bundle
+reqsmith support bundle
+
+# Check known issues
+reqsmith support known-issues
+
+# Report issue
+reqsmith support report-issue
+
+# Show community links
+reqsmith support community
+```
+
+### Bug Reports
+
+#### Collect Debug Information
+
+```bash
+# Generate comprehensive debug report
+reqsmith debug-report
+
+# Include system information
+reqsmith debug-report --include-system
+
+# Include configuration (sanitized)
+reqsmith debug-report --include-config
+
+# Include recent logs
+reqsmith debug-report --include-logs
+
+# Save to file
+reqsmith debug-report --output debug-report.zip
+```
+
+#### Submit Bug Report
+
+When reporting issues, include:
+
+1. **ReqSmith version**: `reqsmith --version`
+2. **System information**: OS, Python version
+3. **Error message**: Complete error output
+4. **Steps to reproduce**: Exact commands used
+5. **Configuration**: Relevant config sections (sanitized)
+6. **Logs**: Recent error logs
+
+## Preventive Measures
+
+### Regular Maintenance
+
+#### Health Monitoring
+
+```bash
+# Schedule regular health checks
+reqsmith schedule health-check --interval daily
+
+# Monitor system resources
+reqsmith monitor resources --alert-threshold 80
+
+# Check for updates
+reqsmith check-updates --notify
+
+# Validate configuration regularly
+reqsmith schedule config-validation --interval weekly
+```
+
+#### Cache Maintenance
+
+```bash
+# Schedule cache cleanup
+reqsmith schedule cache-cleanup --interval weekly
+
+# Monitor cache performance
+reqsmith monitor cache --report weekly
+
+# Validate cache integrity
+reqsmith schedule cache-validation --interval daily
+```
+
+### Configuration Best Practices
+
+1. **Regular backups**: Backup configuration and credentials
+2. **Version control**: Track configuration changes
+3. **Environment separation**: Use separate configs per environment
+4. **Security reviews**: Regularly review credential access
+5. **Performance monitoring**: Monitor and optimize settings
+
+### Monitoring and Alerting
+
+```bash
+# Set up monitoring
+reqsmith monitor setup
+
+# Configure alerts
+reqsmith alerts configure --email admin@example.com
+
+# Monitor API health
+reqsmith monitor api --endpoints endpoints.yaml
+
+# Monitor ReqSmith performance
+reqsmith monitor self --metrics performance,errors,cache
+```
+
+## Emergency Procedures
+
+### Recovery Procedures
+
+#### Configuration Recovery
+
+```bash
+# Restore from backup
+reqsmith config restore config-backup.yaml
+
+# Reset to factory defaults
+reqsmith config reset --all --confirm
+
+# Rebuild configuration
+reqsmith config rebuild --interactive
+```
+
+#### Cache Recovery
+
+```bash
+# Emergency cache clear
+reqsmith cache emergency-clear
+
+# Rebuild cache database
+reqsmith cache rebuild --force
+
+# Restore cache from backup
+reqsmith cache restore cache-backup.db
+```
+
+#### Credential Recovery
+
+```bash
+# Emergency credential reset
+reqsmith auth emergency-reset
+
+# Restore credentials from backup
+reqsmith auth restore auth-backup.json
+
+# Re-authenticate all providers
+reqsmith auth re-auth --all
+```
+
+### Quick Fixes
+
+Common quick fixes for urgent issues:
+
+```bash
+# Reset network settings
+reqsmith config reset --section network
+
+# Clear all caches
+reqsmith cache clear --all
+
+# Reset authentication
+reqsmith auth reset --all
+
+# Restart with clean state
+reqsmith restart --clean-state
+
+# Emergency diagnostic mode
+reqsmith emergency-mode --diagnose
+```
+
+## Performance Optimization
+
+### Optimization Guidelines
+
+1. **Connection pooling**: Enable connection reuse
+2. **Caching**: Use appropriate cache settings
+3. **Compression**: Enable response compression
+4. **Timeouts**: Set reasonable timeout values
+5. **Batch operations**: Use batch requests for multiple operations
+
+### Monitoring Performance
+
+```bash
+# Monitor request performance
+reqsmith monitor performance --duration 3600
+
+# Generate performance report
+reqsmith performance report --period "last 24 hours"
+
+# Identify bottlenecks
+reqsmith performance analyze --identify-bottlenecks
+
+# Optimize configuration
+reqsmith performance optimize --auto-tune
+```
+
+## Next Steps
+
+If issues persist after trying these troubleshooting steps:
+
+1. **Check the FAQ**: `reqsmith faq`
+2. **Search documentation**: `reqsmith docs search "your issue"`
+3. **Check known issues**: `reqsmith support known-issues`
+4. **Generate debug report**: `reqsmith debug-report`
+5. **Contact support**: Use the debug report when seeking help
+6. **Community forums**: Check community discussions
+7. **GitHub issues**: Report bugs on the project repository
+
+Remember to always:
+- Start with basic diagnostics
+- Check recent changes to configuration
+- Use verbose output for debugging
+- Collect relevant logs and system information
+- Try minimal reproduction cases
+- Document your troubleshooting steps

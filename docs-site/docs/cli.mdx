@@ -1,0 +1,433 @@
+---
+title: CLI Reference
+description: "Complete command-line interface reference for ReqSmith"
+---
+
+# CLI Reference
+
+ReqSmith provides a comprehensive command-line interface for API testing and management. This reference covers all available commands and options.
+
+## Global Options
+
+These options are available for all ReqSmith commands:
+
+```bash
+reqsmith [GLOBAL_OPTIONS] COMMAND [COMMAND_OPTIONS]
+```
+
+### Global Options
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--verbose` | `-v` | Enable verbose output |
+| `--debug` | | Enable debug output with detailed logging |
+| `--config` | `-c` | Custom configuration file path |
+| `--storage` | | Custom storage path for data |
+| `--cache-size` | | Cache size in MB |
+| `--no-color` | | Disable colored output |
+| `--help` | | Show help message |
+
+### Examples
+
+```bash
+# Enable verbose output
+reqsmith --verbose request get https://api.example.com
+
+# Use custom config file
+reqsmith --config ./custom-config.json status
+
+# Disable colors (useful for scripts)
+reqsmith --no-color request get https://api.example.com
+```
+
+## Main Commands
+
+### Application Commands
+
+#### `version`
+Show version information
+
+```bash
+reqsmith version
+```
+
+#### `status`
+Show application status and configuration
+
+```bash
+reqsmith status
+```
+
+#### `cleanup`
+Clean up application data (cache, old history, etc.)
+
+```bash
+reqsmith cleanup [OPTIONS]
+```
+
+Options:
+- `--cache` - Clean only cache data
+- `--history` - Clean only history data
+- `--all` - Clean all data
+- `--older-than DAYS` - Clean data older than specified days
+
+## Command Groups
+
+ReqSmith organizes commands into logical groups:
+
+### Request Commands
+
+Execute HTTP requests with various methods and options.
+
+**Base Command:** `reqsmith request`
+
+[Learn more about Request commands →](/cli/request)
+
+### Template Commands
+
+Manage and execute request templates for reusable configurations.
+
+**Base Command:** `reqsmith template`
+
+[Learn more about Template commands →](/cli/template)
+
+### Environment Commands  
+
+Manage environment variables and configurations.
+
+**Base Command:** `reqsmith env`
+
+[Learn more about Environment commands →](/cli/env)
+
+### History Commands
+
+Track, search, and replay request history.
+
+**Base Command:** `reqsmith history`
+
+[Learn more about History commands →](/cli/history)
+
+### Configuration Commands
+
+Manage ReqSmith configuration and settings.
+
+**Base Command:** `reqsmith config`
+
+[Learn more about Configuration commands →](/cli/config)
+
+## Help System
+
+ReqSmith includes a comprehensive built-in help system:
+
+### `help`
+Show comprehensive help and documentation
+
+```bash
+reqsmith help [TOPIC] [OPTIONS]
+```
+
+**Topics:**
+- `getting-started` - Basic introduction and quick start
+- `examples` - Common usage examples  
+- `tutorials` - Detailed step-by-step tutorials
+- `tips` - Productivity tips and best practices
+- `workflows` - Complete workflow guides
+
+**Options:**
+- `--command COMMAND` - Show help for specific command
+- `--category CATEGORY` - Show examples for specific category
+- `--workflow WORKFLOW` - Show specific workflow guide
+
+**Examples:**
+```bash
+# General help
+reqsmith help
+
+# Getting started guide
+reqsmith help getting-started
+
+# Command-specific help
+reqsmith help --command request
+
+# Show examples
+reqsmith help examples
+
+# Show specific workflow
+reqsmith help --workflow api-testing
+```
+
+### `completion`
+Manage shell completion
+
+```bash
+reqsmith completion [OPTIONS]
+```
+
+**Options:**
+- `--install` - Install shell completion
+- `--shell SHELL` - Shell type (bash, zsh, fish, auto)
+- `--show-setup` - Show setup instructions
+
+**Examples:**
+```bash
+# Auto-detect and install completion
+reqsmith completion --install
+
+# Install for specific shell
+reqsmith completion --install --shell zsh
+
+# Show manual setup instructions
+reqsmith completion --show-setup
+```
+
+## Exit Codes
+
+ReqSmith uses standard exit codes to indicate command results:
+
+| Exit Code | Meaning |
+|-----------|---------|
+| `0` | Success |
+| `1` | General error |
+| `2` | Invalid command or arguments |
+| `3` | Network error |
+| `4` | Authentication error |
+| `5` | Configuration error |
+| `6` | File not found error |
+| `7` | Permission error |
+
+## Environment Variables
+
+Override configuration and behavior using environment variables:
+
+### Global Environment Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `REQSMITH_DEBUG` | Enable debug mode | `true` |
+| `REQSMITH_CONFIG_PATH` | Custom config file path | `/path/to/config.json` |
+| `REQSMITH_STORAGE_PATH` | Custom storage directory | `/path/to/storage` |
+| `REQSMITH_NO_COLOR` | Disable colored output | `true` |
+
+### Configuration Override Variables
+
+Any configuration setting can be overridden using the pattern `REQSMITH_<SECTION>_<KEY>`:
+
+```bash
+# Network settings
+export REQSMITH_NETWORK_TIMEOUT_SECONDS=60
+export REQSMITH_NETWORK_VERIFY_SSL=false
+
+# Output settings  
+export REQSMITH_OUTPUT_DEFAULT_FORMAT=table
+export REQSMITH_OUTPUT_COLOR=true
+
+# Cache settings
+export REQSMITH_CACHE_ENABLED=true
+export REQSMITH_CACHE_MEMORY_SIZE_MB=100
+
+# AI settings
+export REQSMITH_AI_ENABLED=true
+export REQSMITH_GEMINI_API_KEY="your-api-key"
+```
+
+View all available environment variables:
+```bash
+reqsmith config env
+```
+
+## Configuration File
+
+ReqSmith uses a JSON configuration file located at:
+- **Windows**: `%USERPROFILE%\.reqsmith\config.json`
+- **macOS/Linux**: `~/.reqsmith/config.json`
+
+### Configuration Structure
+
+```json
+{
+  "network": {
+    "timeout_seconds": 30,
+    "max_redirects": 5,
+    "verify_ssl": true,
+    "user_agent": "ReqSmith/1.0.0"
+  },
+  "output": {
+    "default_format": "json",
+    "color": true,
+    "show_headers": true
+  },
+  "cache": {
+    "enabled": true,
+    "memory_size_mb": 50,
+    "disk_size_mb": 200
+  },
+  "ai": {
+    "enabled": false,
+    "gemini_api_key": null
+  }
+}
+```
+
+## Error Handling
+
+ReqSmith provides detailed error messages and suggestions:
+
+### Common Error Patterns
+
+```bash
+# Network errors
+Error: Connection timeout after 30 seconds
+Suggestion: Try increasing timeout with --timeout option
+
+# Authentication errors  
+Error: HTTP 401 Unauthorized
+Suggestion: Check your authentication token or credentials
+
+# Configuration errors
+Error: Invalid configuration file
+Suggestion: Run 'reqsmith config validate' to check configuration
+```
+
+### Debug Mode
+
+Enable debug mode for detailed error information:
+
+```bash
+# Enable debug for single command
+reqsmith --debug request get https://api.example.com
+
+# Enable debug globally
+export REQSMITH_DEBUG=true
+reqsmith request get https://api.example.com
+```
+
+## Output Formats
+
+ReqSmith supports multiple output formats:
+
+### JSON Format (Default)
+```bash
+reqsmith request get https://api.example.com --format json
+```
+
+### Table Format
+```bash
+reqsmith request get https://api.example.com --format table
+```
+
+### Raw Format
+```bash
+reqsmith request get https://api.example.com --format raw
+```
+
+### Auto Format
+```bash
+reqsmith request get https://api.example.com --format auto
+```
+
+## Piping and Scripting
+
+ReqSmith is designed to work well in scripts and pipelines:
+
+### Save Response to File
+```bash
+reqsmith request get https://api.example.com --output response.json
+```
+
+### Pipe Response to Other Commands
+```bash
+reqsmith request get https://api.example.com | jq '.data'
+```
+
+### Check Exit Code in Scripts
+```bash
+#!/bin/bash
+if reqsmith request get https://api.example.com/health; then
+    echo "API is healthy"
+else
+    echo "API is down"
+    exit 1
+fi
+```
+
+### Disable Colors for Scripts
+```bash
+reqsmith --no-color request get https://api.example.com
+```
+
+## Performance Considerations
+
+### Caching
+Enable caching for better performance with repeated requests:
+```bash
+reqsmith config set cache.enabled true
+```
+
+### Parallel Requests
+Use batch requests for multiple endpoints:
+```bash
+reqsmith request batch requests.json --parallel
+```
+
+### Memory Usage
+Adjust cache sizes based on available memory:
+```bash
+reqsmith config set cache.memory_size_mb 100
+reqsmith config set cache.disk_size_mb 500
+```
+
+## Security Features
+
+### SSL/TLS Verification
+```bash
+# Enable SSL verification (default)
+reqsmith config set network.verify_ssl true
+
+# Disable for development (not recommended for production)
+reqsmith config set network.verify_ssl false
+```
+
+### Sensitive Data Handling
+- Configuration files are stored with restricted permissions
+- API keys and tokens are masked in debug output
+- Use environment variables for sensitive data
+
+## Integration Examples
+
+### CI/CD Integration
+```bash
+# Run health checks in CI
+reqsmith request get ${API_URL}/health --format json --no-color
+
+# Validate API responses
+reqsmith template use api-test --env ci --format table
+```
+
+### Monitoring Scripts
+```bash
+#!/bin/bash
+# Simple API monitoring script
+reqsmith request get https://api.example.com/health || {
+    echo "API health check failed"
+    # Send notification
+}
+```
+
+### Development Workflow
+```bash
+# Start development session
+reqsmith env switch development
+reqsmith template use local-health-check
+reqsmith request get ${API_BASE_URL}/status
+```
+
+## Next Steps
+
+- Explore individual command references:
+  - [Request Commands](/cli/request)
+  - [Template Commands](/cli/template)  
+  - [Environment Commands](/cli/env)
+  - [History Commands](/cli/history)
+  - [Configuration Commands](/cli/config)
+- Check out [Examples](/examples/basic-requests) for real-world usage
+- Learn about [Configuration](/configuration) for customizing behavior

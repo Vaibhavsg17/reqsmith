@@ -1,0 +1,344 @@
+---
+title: Basic Request Examples
+description: "Simple examples to get started with ReqSmith HTTP requests"
+---
+
+# Basic Request Examples
+
+This page provides simple, practical examples to help you get started with ReqSmith's core HTTP request functionality.
+
+## GET Requests
+
+### Simple GET Request
+
+```bash
+# Basic GET request
+reqsmith get https://api.github.com/users/octocat
+
+# GET with query parameters
+reqsmith get "https://api.github.com/search/users?q=location:san+francisco"
+
+# GET with custom headers
+reqsmith get https://api.github.com/user \
+  --header "Authorization: Bearer your-token" \
+  --header "Accept: application/vnd.github.v3+json"
+```
+
+### GET with Output Options
+
+```bash
+# Save response to file
+reqsmith get https://api.github.com/users/octocat --output user.json
+
+# Pretty print JSON
+reqsmith get https://api.github.com/users/octocat --pretty
+
+# Show only response headers
+reqsmith get https://api.github.com/users/octocat --headers-only
+
+# Show timing information
+reqsmith get https://api.github.com/users/octocat --timing
+```
+
+## POST Requests
+
+### JSON POST Requests
+
+```bash
+# POST with JSON data
+reqsmith post https://api.example.com/users \
+  --data '{"name": "John Doe", "email": "john@example.com"}'
+
+# POST with JSON from file
+reqsmith post https://api.example.com/users \
+  --data @user.json
+
+# POST with form data
+reqsmith post https://api.example.com/login \
+  --form username=john \
+  --form password=secret
+```
+
+### File Upload
+
+```bash
+# Upload a file
+reqsmith post https://api.example.com/upload \
+  --file document=@./report.pdf \
+  --header "Content-Type: multipart/form-data"
+
+# Multiple file upload
+reqsmith post https://api.example.com/upload \
+  --file document1=@./file1.pdf \
+  --file document2=@./file2.pdf
+```
+
+## PUT and PATCH Requests
+
+### Update Resources
+
+```bash
+# PUT request (full update)
+reqsmith put https://api.example.com/users/123 \
+  --data '{"name": "Jane Doe", "email": "jane@example.com", "age": 30}'
+
+# PATCH request (partial update)
+reqsmith patch https://api.example.com/users/123 \
+  --data '{"email": "newemail@example.com"}'
+
+# PUT with authentication
+reqsmith put https://api.example.com/users/123 \
+  --data @user-update.json \
+  --header "Authorization: Bearer your-token"
+```
+
+## DELETE Requests
+
+### Delete Resources
+
+```bash
+# Simple DELETE
+reqsmith delete https://api.example.com/users/123
+
+# DELETE with authentication
+reqsmith delete https://api.example.com/users/123 \
+  --header "Authorization: Bearer your-token"
+
+# DELETE with confirmation (when supported by API)
+reqsmith delete https://api.example.com/users/123 \
+  --data '{"confirm": true}'
+```
+
+## Authentication Examples
+
+### Bearer Token Authentication
+
+```bash
+# Using Authorization header
+reqsmith get https://api.example.com/protected \
+  --header "Authorization: Bearer your-access-token"
+
+# Using shorthand auth option
+reqsmith get https://api.example.com/protected \
+  --auth bearer:your-access-token
+```
+
+### Basic Authentication
+
+```bash
+# Basic auth with username:password
+reqsmith get https://api.example.com/protected \
+  --auth basic:username:password
+
+# Basic auth with base64 encoded credentials
+reqsmith get https://api.example.com/protected \
+  --header "Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ="
+```
+
+### API Key Authentication
+
+```bash
+# API key in header
+reqsmith get https://api.example.com/data \
+  --header "X-API-Key: your-api-key"
+
+# API key in query parameter
+reqsmith get "https://api.example.com/data?api_key=your-api-key"
+```
+
+## Working with Headers
+
+### Common Headers
+
+```bash
+# Set content type
+reqsmith post https://api.example.com/data \
+  --header "Content-Type: application/json" \
+  --data '{"key": "value"}'
+
+# Set user agent
+reqsmith get https://api.example.com/data \
+  --header "User-Agent: MyApp/1.0"
+
+# Set multiple headers
+reqsmith get https://api.example.com/data \
+  --header "Accept: application/json" \
+  --header "Accept-Language: en-US" \
+  --header "Cache-Control: no-cache"
+```
+
+### Custom Headers
+
+```bash
+# Custom application headers
+reqsmith get https://api.example.com/data \
+  --header "X-Client-Version: 1.2.3" \
+  --header "X-Request-ID: req-123" \
+  --header "X-Feature-Flag: new-ui"
+```
+
+## Response Handling
+
+### Response Filtering
+
+```bash
+# Show only response body
+reqsmith get https://api.github.com/users/octocat --body-only
+
+# Show only status code
+reqsmith get https://api.github.com/users/octocat --status-only
+
+# Show response size
+reqsmith get https://api.github.com/users/octocat --include-size
+```
+
+### Response Formatting
+
+```bash
+# Format JSON response
+reqsmith get https://api.github.com/users/octocat --format json
+
+# Format as table (for structured data)
+reqsmith get https://api.github.com/users/octocat --format table
+
+# Format as YAML
+reqsmith get https://api.github.com/users/octocat --format yaml
+```
+
+## Error Handling
+
+### Handling HTTP Errors
+
+```bash
+# Continue on HTTP errors
+reqsmith get https://api.example.com/not-found --ignore-errors
+
+# Show detailed error information
+reqsmith get https://api.example.com/error --verbose
+
+# Retry on failure
+reqsmith get https://api.example.com/unreliable \
+  --retry 3 \
+  --retry-delay 1000
+```
+
+### Debugging Requests
+
+```bash
+# Show request details
+reqsmith get https://api.example.com/data --debug
+
+# Show curl equivalent
+reqsmith get https://api.example.com/data --show-curl
+
+# Verbose output with timing
+reqsmith get https://api.example.com/data --verbose --timing
+```
+
+## Common API Patterns
+
+### REST API Operations
+
+```bash
+# List resources
+reqsmith get https://api.example.com/users
+
+# Get specific resource
+reqsmith get https://api.example.com/users/123
+
+# Create new resource
+reqsmith post https://api.example.com/users \
+  --data '{"name": "John", "email": "john@example.com"}'
+
+# Update resource
+reqsmith put https://api.example.com/users/123 \
+  --data '{"name": "John Doe", "email": "john.doe@example.com"}'
+
+# Delete resource
+reqsmith delete https://api.example.com/users/123
+```
+
+### Pagination
+
+```bash
+# Get first page
+reqsmith get "https://api.example.com/users?page=1&limit=10"
+
+# Get next page
+reqsmith get "https://api.example.com/users?page=2&limit=10"
+
+# Get all pages (with follow option)
+reqsmith get "https://api.example.com/users?page=1&limit=10" --follow-pagination
+```
+
+### Search and Filtering
+
+```bash
+# Search users
+reqsmith get "https://api.example.com/users?search=john"
+
+# Filter by status
+reqsmith get "https://api.example.com/users?status=active"
+
+# Multiple filters
+reqsmith get "https://api.example.com/users?status=active&role=admin&page=1"
+```
+
+## Time and Date Examples
+
+### Working with Timestamps
+
+```bash
+# Filter by date range
+reqsmith get "https://api.example.com/events?start_date=2024-01-01&end_date=2024-12-31"
+
+# Get recent data
+reqsmith get "https://api.example.com/logs?since=2024-01-01T00:00:00Z"
+
+# Using relative dates
+reqsmith get "https://api.example.com/logs?since=1h" # Last hour
+reqsmith get "https://api.example.com/logs?since=1d" # Last day
+```
+
+## Environment-Specific Examples
+
+### Development Environment
+
+```bash
+# Using development API
+reqsmith get https://api-dev.example.com/users \
+  --header "X-Environment: development"
+```
+
+### Staging Environment
+
+```bash
+# Using staging API
+reqsmith get https://api-staging.example.com/users \
+  --header "X-Environment: staging"
+```
+
+### Production Environment
+
+```bash
+# Using production API (with extra caution)
+reqsmith get https://api.example.com/users \
+  --header "X-Environment: production" \
+  --confirm # Prompt for confirmation
+```
+
+## Best Practices
+
+1. **Use descriptive headers**: Include version, client info, and request IDs
+2. **Handle errors gracefully**: Use retry mechanisms and proper error handling
+3. **Validate data**: Check response status and content before processing
+4. **Use authentication**: Always authenticate properly for protected resources
+5. **Monitor performance**: Use timing flags to track API performance
+6. **Save responses**: Use output files for further processing
+7. **Use templates**: Create reusable templates for common requests
+
+## Next Steps
+
+- Learn about [Templates](/cli/template) for reusable requests
+- Explore [Environment Management](/cli/env) for different API environments
+- Check out [Advanced Scenarios](/examples/advanced-scenarios) for complex workflows

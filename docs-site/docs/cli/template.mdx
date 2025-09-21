@@ -1,0 +1,773 @@
+---
+title: Template Commands
+description: "Complete reference for ReqSmith's template management commands"
+---
+
+# Template Commands
+
+ReqSmith's template system allows you to create, manage, and execute reusable API request collections. Templates support variables, dependencies, conditional logic, and complex workflows.
+
+## Template Basics
+
+### Creating Templates
+
+Create new templates from scratch or from existing requests:
+
+```bash
+# Create a new template interactively
+reqsmith template create
+
+# Create template with basic information
+reqsmith template create \
+  --name github-api \
+  --description "GitHub API operations" \
+  --author "Your Name"
+
+# Create template from request history
+reqsmith template create-from-history \
+  --request-id 12345 \
+  --name github-user-template
+
+# Create template from existing request
+reqsmith template create-from-request \
+  --url https://api.github.com/users/octocat \
+  --name github-user
+```
+
+### Listing Templates
+
+View available templates:
+
+```bash
+# List all templates
+reqsmith template list
+
+# List with details
+reqsmith template list --details
+
+# Filter by name pattern
+reqsmith template list --filter "github*"
+
+# Show only enabled templates
+reqsmith template list --enabled
+
+# List templates by author
+reqsmith template list --author "Your Name"
+```
+
+### Template Information
+
+Get detailed information about templates:
+
+```bash
+# Show template details
+reqsmith template info github-api
+
+# Show template variables
+reqsmith template variables github-api
+
+# Show template dependencies
+reqsmith template dependencies github-api
+
+# Show template requests
+reqsmith template requests github-api
+
+# Show template validation status
+reqsmith template validate github-api
+```
+
+## Running Templates
+
+### Basic Execution
+
+Execute templates with various options:
+
+```bash
+# Run entire template
+reqsmith template run github-api
+
+# Run specific request from template
+reqsmith template run github-api get-user
+
+# Run with variables
+reqsmith template run github-api \
+  --var username=octocat \
+  --var repo=Hello-World
+
+# Run with environment
+reqsmith template run github-api --env production
+
+# Run with variable file
+reqsmith template run github-api --vars-file variables.json
+```
+
+### Execution Control
+
+Control how templates execute:
+
+```bash
+# Dry run (validate without executing)
+reqsmith template run github-api --dry-run
+
+# Stop on first error
+reqsmith template run github-api --stop-on-error
+
+# Continue on errors
+reqsmith template run github-api --continue-on-error
+
+# Run only specific steps
+reqsmith template run github-api --steps get-user,list-repos
+
+# Skip specific steps
+reqsmith template run github-api --skip update-profile
+```
+
+### Parallel Execution
+
+Execute requests in parallel:
+
+```bash
+# Run independent requests in parallel
+reqsmith template run github-api --parallel
+
+# Limit parallel execution
+reqsmith template run github-api --parallel --max-concurrent 3
+
+# Force sequential execution
+reqsmith template run github-api --sequential
+```
+
+## Template Management
+
+### Importing Templates
+
+Import templates from various sources:
+
+```bash
+# Import from file
+reqsmith template import template.yaml
+
+# Import from URL
+reqsmith template import https://example.com/templates/api-template.yaml
+
+# Import from directory
+reqsmith template import-dir ./templates/
+
+# Import with custom name
+reqsmith template import template.yaml --name custom-name
+
+# Import and enable immediately
+reqsmith template import template.yaml --enable
+```
+
+### Exporting Templates
+
+Export templates for sharing:
+
+```bash
+# Export single template
+reqsmith template export github-api --output github-api.yaml
+
+# Export all templates
+reqsmith template export-all --output-dir ./templates/
+
+# Export with dependencies
+reqsmith template export github-api --include-dependencies
+
+# Export as Postman collection
+reqsmith template export github-api --format postman
+
+# Export as OpenAPI spec
+reqsmith template export github-api --format openapi
+```
+
+### Template Validation
+
+Validate template syntax and structure:
+
+```bash
+# Validate template file
+reqsmith template validate template.yaml
+
+# Validate installed template
+reqsmith template validate github-api
+
+# Validate all templates
+reqsmith template validate-all
+
+# Check for missing variables
+reqsmith template check-variables github-api
+
+# Validate request dependencies
+reqsmith template check-dependencies github-api
+```
+
+## Template Editing
+
+### Interactive Editing
+
+Edit templates interactively:
+
+```bash
+# Edit template interactively
+reqsmith template edit github-api
+
+# Edit specific request
+reqsmith template edit github-api --request get-user
+
+# Edit template variables
+reqsmith template edit-variables github-api
+
+# Edit template metadata
+reqsmith template edit-metadata github-api
+```
+
+### File-based Editing
+
+Edit template files directly:
+
+```bash
+# Open template in default editor
+reqsmith template open github-api
+
+# Open in specific editor
+reqsmith template open github-api --editor vim
+
+# Show template file location
+reqsmith template location github-api
+
+# Reload template after external edits
+reqsmith template reload github-api
+```
+
+### Template Updates
+
+Update and modify templates:
+
+```bash
+# Update template metadata
+reqsmith template update github-api \
+  --description "Updated GitHub API operations" \
+  --version 2.0
+
+# Add new request to template
+reqsmith template add-request github-api \
+  --name get-repos \
+  --method GET \
+  --url "{{base_url}}/users/{{username}}/repos"
+
+# Remove request from template
+reqsmith template remove-request github-api get-user
+
+# Update request in template
+reqsmith template update-request github-api get-user \
+  --url "{{base_url}}/users/{{username}}" \
+  --header "Accept: application/vnd.github.v3+json"
+```
+
+## Variables and Environments
+
+### Variable Management
+
+Work with template variables:
+
+```bash
+# List template variables
+reqsmith template variables github-api
+
+# Set default variable values
+reqsmith template set-variable github-api username octocat
+
+# Remove variable
+reqsmith template unset-variable github-api username
+
+# Import variables from file
+reqsmith template import-variables github-api variables.json
+
+# Export variables to file
+reqsmith template export-variables github-api --output variables.json
+```
+
+### Environment Integration
+
+Use templates with environments:
+
+```bash
+# Run template with specific environment
+reqsmith template run github-api --env production
+
+# Show environment-specific variables
+reqsmith template variables github-api --env production
+
+# Validate template with environment
+reqsmith template validate github-api --env production
+
+# Test template across all environments
+reqsmith template test-environments github-api
+```
+
+### Variable Substitution
+
+Control variable substitution:
+
+```bash
+# Show variable substitution preview
+reqsmith template preview github-api --var username=octocat
+
+# Debug variable resolution
+reqsmith template debug-variables github-api
+
+# Use custom variable delimiter
+reqsmith template run github-api --var-delimiter "{{|}}"
+
+# Escape variable substitution
+reqsmith template run github-api --no-variable-substitution
+```
+
+## Template Testing
+
+### Test Execution
+
+Test templates systematically:
+
+```bash
+# Test template with default variables
+reqsmith template test github-api
+
+# Test with specific test cases
+reqsmith template test github-api --test-cases test-cases.json
+
+# Test all requests in template
+reqsmith template test-all github-api
+
+# Test specific requests only
+reqsmith template test github-api --requests get-user,list-repos
+```
+
+### Test Configuration
+
+Configure test behavior:
+
+```bash
+# Test with timeout
+reqsmith template test github-api --timeout 30000
+
+# Test with retries
+reqsmith template test github-api --retry 3
+
+# Test with custom assertions
+reqsmith template test github-api --assertions test-assertions.yaml
+
+# Generate test report
+reqsmith template test github-api --report test-report.html
+```
+
+### Batch Testing
+
+Test multiple templates:
+
+```bash
+# Test all templates
+reqsmith template test-all
+
+# Test templates matching pattern
+reqsmith template test-batch --pattern "github*"
+
+# Test with parallel execution
+reqsmith template test-batch --parallel --max-concurrent 5
+
+# Test and generate combined report
+reqsmith template test-batch --report combined-report.html
+```
+
+## Template Sharing
+
+### Template Registry
+
+Work with template registries:
+
+```bash
+# List available registries
+reqsmith template registry list
+
+# Add template registry
+reqsmith template registry add \
+  --name public \
+  --url https://registry.reqsmith.dev
+
+# Search registry for templates
+reqsmith template registry search "github"
+
+# Install template from registry
+reqsmith template registry install github-api
+
+# Publish template to registry
+reqsmith template registry publish github-api --registry public
+```
+
+### Template Collections
+
+Manage template collections:
+
+```bash
+# Create template collection
+reqsmith template collection create \
+  --name api-suite \
+  --description "Complete API testing suite"
+
+# Add templates to collection
+reqsmith template collection add api-suite github-api
+
+# List collection contents
+reqsmith template collection list api-suite
+
+# Run entire collection
+reqsmith template collection run api-suite
+
+# Export collection
+reqsmith template collection export api-suite --output api-suite.yaml
+```
+
+## Advanced Template Features
+
+### Template Dependencies
+
+Manage template dependencies:
+
+```bash
+# Show template dependencies
+reqsmith template dependencies github-api
+
+# Add dependency
+reqsmith template add-dependency github-api auth-template
+
+# Remove dependency
+reqsmith template remove-dependency github-api auth-template
+
+# Resolve all dependencies
+reqsmith template resolve-dependencies github-api
+
+# Check for circular dependencies
+reqsmith template check-cycles github-api
+```
+
+### Template Inheritance
+
+Work with template inheritance:
+
+```bash
+# Create template extending another
+reqsmith template create \
+  --name github-extended \
+  --extends github-api
+
+# Show inheritance chain
+reqsmith template inheritance github-extended
+
+# Override parent template values
+reqsmith template override github-extended \
+  --request get-user \
+  --header "X-Custom: value"
+
+# Merge with parent template
+reqsmith template merge github-extended --parent github-api
+```
+
+### Template Hooks
+
+Configure template hooks:
+
+```bash
+# Add pre-request hook
+reqsmith template add-hook github-api \
+  --type pre-request \
+  --script validate-token.js
+
+# Add post-request hook
+reqsmith template add-hook github-api \
+  --type post-request \
+  --script process-response.js
+
+# List template hooks
+reqsmith template hooks github-api
+
+# Remove hook
+reqsmith template remove-hook github-api pre-request
+```
+
+## Template Formats
+
+### YAML Template Format
+
+Create templates in YAML format:
+
+```yaml
+# github-api.yaml
+name: github-api
+description: GitHub API operations
+version: 1.0
+author: Your Name
+
+variables:
+  base_url: https://api.github.com
+  username: octocat
+
+requests:
+  - name: get-user
+    method: GET
+    url: "{{base_url}}/users/{{username}}"
+    headers:
+      Accept: application/vnd.github.v3+json
+    
+  - name: list-repos
+    method: GET
+    url: "{{base_url}}/users/{{username}}/repos"
+    depends_on: [get-user]
+    parameters:
+      per_page: 30
+      sort: updated
+```
+
+### JSON Template Format
+
+Templates can also be created in JSON:
+
+```json
+{
+  "name": "github-api",
+  "description": "GitHub API operations",
+  "version": "1.0",
+  "author": "Your Name",
+  "variables": {
+    "base_url": "https://api.github.com",
+    "username": "octocat"
+  },
+  "requests": [
+    {
+      "name": "get-user",
+      "method": "GET",
+      "url": "{{base_url}}/users/{{username}}",
+      "headers": {
+        "Accept": "application/vnd.github.v3+json"
+      }
+    }
+  ]
+}
+```
+
+### Template Conversion
+
+Convert between template formats:
+
+```bash
+# Convert YAML to JSON
+reqsmith template convert github-api.yaml --format json
+
+# Convert JSON to YAML
+reqsmith template convert github-api.json --format yaml
+
+# Convert to Postman collection
+reqsmith template convert github-api.yaml --format postman
+
+# Convert to OpenAPI specification
+reqsmith template convert github-api.yaml --format openapi
+```
+
+## Template Debugging
+
+### Debug Template Execution
+
+Debug template issues:
+
+```bash
+# Debug template execution
+reqsmith template run github-api --debug
+
+# Verbose template execution
+reqsmith template run github-api --verbose
+
+# Show variable resolution
+reqsmith template run github-api --debug-variables
+
+# Step through template execution
+reqsmith template run github-api --step-by-step
+
+# Dry run with detailed output
+reqsmith template run github-api --dry-run --verbose
+```
+
+### Template Analysis
+
+Analyze template performance and issues:
+
+```bash
+# Analyze template performance
+reqsmith template analyze github-api
+
+# Check for optimization opportunities
+reqsmith template optimize github-api
+
+# Validate template best practices
+reqsmith template best-practices github-api
+
+# Generate template documentation
+reqsmith template document github-api --output github-api-docs.md
+```
+
+## Command Reference
+
+### Core Template Commands
+
+```bash
+# Template management
+reqsmith template list                    # List templates
+reqsmith template info TEMPLATE          # Show template info
+reqsmith template create                  # Create new template
+reqsmith template import FILE             # Import template
+reqsmith template export TEMPLATE        # Export template
+
+# Template execution
+reqsmith template run TEMPLATE            # Run template
+reqsmith template test TEMPLATE           # Test template
+reqsmith template validate TEMPLATE       # Validate template
+
+# Template editing
+reqsmith template edit TEMPLATE           # Edit template
+reqsmith template update TEMPLATE         # Update template
+reqsmith template add-request TEMPLATE    # Add request
+reqsmith template remove-request TEMPLATE # Remove request
+
+# Variables and environments
+reqsmith template variables TEMPLATE      # List variables
+reqsmith template set-variable TEMPLATE   # Set variable
+reqsmith template preview TEMPLATE        # Preview substitution
+
+# Advanced features
+reqsmith template dependencies TEMPLATE   # Show dependencies
+reqsmith template hooks TEMPLATE          # List hooks
+reqsmith template convert FILE            # Convert format
+```
+
+### Template Options
+
+```bash
+# Execution options
+--var KEY=VALUE                 # Set variable value
+--vars-file FILE                # Variables from file
+--env ENVIRONMENT               # Use environment
+--dry-run                       # Validate without executing
+--parallel                      # Enable parallel execution
+--stop-on-error                 # Stop on first error
+--continue-on-error             # Continue on errors
+
+# Output options
+--output FILE                   # Save output to file
+--format FORMAT                 # Output format
+--verbose                       # Verbose output
+--quiet                         # Minimal output
+--debug                         # Debug mode
+
+# Filtering options
+--requests LIST                 # Run specific requests
+--skip LIST                     # Skip specific requests
+--steps LIST                    # Run specific steps
+--tags LIST                     # Filter by tags
+
+# Template options
+--name NAME                     # Template name
+--description TEXT              # Template description
+--author AUTHOR                 # Template author
+--version VERSION               # Template version
+--enable/--disable              # Enable/disable template
+```
+
+## Best Practices
+
+1. **Use descriptive names**: Give templates and requests clear, descriptive names
+2. **Document thoroughly**: Add descriptions and comments to templates
+3. **Use variables**: Make templates reusable with variables
+4. **Organize logically**: Group related requests in templates
+5. **Handle dependencies**: Define request dependencies correctly
+6. **Test regularly**: Validate templates with different variable sets
+7. **Version control**: Keep templates in version control systems
+8. **Share responsibly**: Share templates with appropriate documentation
+9. **Optimize performance**: Use parallel execution where appropriate
+10. **Monitor usage**: Track template execution and performance
+
+## Examples
+
+### Complete Template Example
+
+```yaml
+# complete-api-template.yaml
+name: complete-api-example
+description: Comprehensive API testing template
+version: 2.1
+author: API Team
+tags: [api, testing, example]
+
+variables:
+  base_url: https://api.example.com
+  api_key: ${API_KEY}
+  user_id: 123
+  timeout: 30000
+
+defaults:
+  headers:
+    User-Agent: ReqSmith/1.0
+    Accept: application/json
+  timeout: "{{timeout}}"
+
+authentication:
+  type: api_key
+  header: X-API-Key
+  value: "{{api_key}}"
+
+requests:
+  - name: health-check
+    description: Check API health
+    method: GET
+    url: "{{base_url}}/health"
+    expect:
+      status: 200
+      headers:
+        Content-Type: application/json
+    
+  - name: get-user
+    description: Get user information
+    method: GET
+    url: "{{base_url}}/users/{{user_id}}"
+    depends_on: [health-check]
+    extract:
+      user_name: response.body.name
+      user_email: response.body.email
+    
+  - name: update-user
+    description: Update user information
+    method: PUT
+    url: "{{base_url}}/users/{{user_id}}"
+    headers:
+      Content-Type: application/json
+    body: |
+      {
+        "name": "{{user_name}}",
+        "email": "updated-{{user_email}}"
+      }
+    depends_on: [get-user]
+    expect:
+      status: 200
+
+hooks:
+  pre_request:
+    - validate_environment
+  post_request:
+    - log_response
+    - update_metrics
+```
+
+## Next Steps
+
+- Learn about [Environment Commands](/cli/env) for managing configurations
+- Explore [History Commands](/cli/history) for tracking template executions
+- Check out [Configuration Commands](/cli/config) for template settings
+- See [Request Commands](/cli/request) for individual request execution

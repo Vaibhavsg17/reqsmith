@@ -1,0 +1,488 @@
+---
+title: Integration Examples
+description: "Real-world integration patterns with popular APIs and services"
+---
+
+# Integration Examples
+
+This page demonstrates how to integrate ReqSmith with popular APIs and services, providing practical examples for common integration patterns.
+
+## GitHub API Integration
+
+### Repository Management
+
+```bash
+# Get repository information
+reqsmith get https://api.github.com/repos/owner/repo \
+  --header "Authorization: Bearer $GITHUB_TOKEN" \
+  --header "Accept: application/vnd.github.v3+json"
+
+# Create a new repository
+reqsmith post https://api.github.com/user/repos \
+  --header "Authorization: Bearer $GITHUB_TOKEN" \
+  --data '{
+    "name": "new-repo",
+    "description": "Created via ReqSmith",
+    "private": false,
+    "auto_init": true
+  }'
+
+# Create an issue
+reqsmith post https://api.github.com/repos/owner/repo/issues \
+  --header "Authorization: Bearer $GITHUB_TOKEN" \
+  --data '{
+    "title": "Bug report from API",
+    "body": "Found via automated testing",
+    "labels": ["bug", "api"]
+  }'
+```
+
+### GitHub Actions Integration
+
+```bash
+# Trigger workflow dispatch
+reqsmith post https://api.github.com/repos/owner/repo/actions/workflows/deploy.yml/dispatches \
+  --header "Authorization: Bearer $GITHUB_TOKEN" \
+  --data '{
+    "ref": "main",
+    "inputs": {
+      "environment": "production",
+      "version": "v1.2.3"
+    }
+  }'
+
+# Check workflow status
+reqsmith get https://api.github.com/repos/owner/repo/actions/runs \
+  --header "Authorization: Bearer $GITHUB_TOKEN"
+```
+
+## Slack Integration
+
+### Message and Notification System
+
+```bash
+# Send message to channel
+reqsmith post https://slack.com/api/chat.postMessage \
+  --header "Authorization: Bearer $SLACK_BOT_TOKEN" \
+  --data '{
+    "channel": "#general",
+    "text": "Deployment completed successfully! 🚀",
+    "attachments": [{
+      "color": "good",
+      "fields": [{
+        "title": "Environment",
+        "value": "Production",
+        "short": true
+      }, {
+        "title": "Version",
+        "value": "v1.2.3",
+        "short": true
+      }]
+    }]
+  }'
+
+# Create Slack workflow webhook
+reqsmith post https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX \
+  --data '{
+    "text": "API Alert: High response time detected",
+    "blocks": [{
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Alert:* API response time exceeded threshold\n*Service:* User API\n*Response Time:* 2.5s"
+      }
+    }]
+  }'
+```
+
+## AWS Services Integration
+
+### S3 Operations
+
+```bash
+# Upload file to S3 (using AWS Signature V4)
+reqsmith put https://bucket-name.s3.amazonaws.com/file.txt \
+  --file @local-file.txt \
+  --header "Authorization: AWS4-HMAC-SHA256 Credential=$AWS_ACCESS_KEY/20241201/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-date, Signature=$SIGNATURE" \
+  --header "x-amz-date: 20241201T120000Z"
+
+# List S3 objects
+reqsmith get https://bucket-name.s3.amazonaws.com/ \
+  --header "Authorization: AWS4-HMAC-SHA256 ..."
+```
+
+### Lambda Function Invocation
+
+```bash
+# Invoke Lambda function
+reqsmith post https://lambda.us-east-1.amazonaws.com/2015-03-31/functions/my-function/invocations \
+  --header "Authorization: AWS4-HMAC-SHA256 ..." \
+  --data '{
+    "input": "test data",
+    "context": {
+      "user_id": "12345"
+    }
+  }'
+```
+
+## Google Cloud Integration
+
+### Cloud Storage
+
+```bash
+# Upload to Google Cloud Storage
+reqsmith post "https://storage.googleapis.com/upload/storage/v1/b/bucket-name/o?uploadType=media&name=file.txt" \
+  --header "Authorization: Bearer $GOOGLE_ACCESS_TOKEN" \
+  --header "Content-Type: text/plain" \
+  --file @local-file.txt
+
+# List objects
+reqsmith get https://storage.googleapis.com/storage/v1/b/bucket-name/o \
+  --header "Authorization: Bearer $GOOGLE_ACCESS_TOKEN"
+```
+
+### Google Sheets Integration
+
+```bash
+# Read from Google Sheets
+reqsmith get "https://sheets.googleapis.com/v4/spreadsheets/SPREADSHEET_ID/values/Sheet1!A1:D10" \
+  --header "Authorization: Bearer $GOOGLE_ACCESS_TOKEN"
+
+# Write to Google Sheets
+reqsmith put "https://sheets.googleapis.com/v4/spreadsheets/SPREADSHEET_ID/values/Sheet1!A1:B2?valueInputOption=RAW" \
+  --header "Authorization: Bearer $GOOGLE_ACCESS_TOKEN" \
+  --data '{
+    "values": [
+      ["Name", "Email"],
+      ["John Doe", "john@example.com"]
+    ]
+  }'
+```
+
+## Stripe Payment Integration
+
+### Payment Processing
+
+```bash
+# Create a customer
+reqsmith post https://api.stripe.com/v1/customers \
+  --header "Authorization: Bearer $STRIPE_SECRET_KEY" \
+  --data "name=John Doe&email=john@example.com"
+
+# Create a payment intent
+reqsmith post https://api.stripe.com/v1/payment_intents \
+  --header "Authorization: Bearer $STRIPE_SECRET_KEY" \
+  --data "amount=2000&currency=usd&customer=cus_customer_id"
+
+# Retrieve payment status
+reqsmith get https://api.stripe.com/v1/payment_intents/pi_payment_intent_id \
+  --header "Authorization: Bearer $STRIPE_SECRET_KEY"
+```
+
+## Docker Registry Integration
+
+### Container Image Management
+
+```bash
+# Get authentication token
+reqsmith get "https://auth.docker.io/token?service=registry.docker.io&scope=repository:library/nginx:pull" \
+  --save-response docker-token.json
+
+TOKEN=$(cat docker-token.json | jq -r '.token')
+
+# Get image manifest
+reqsmith get https://registry-1.docker.io/v2/library/nginx/manifests/latest \
+  --header "Authorization: Bearer $TOKEN" \
+  --header "Accept: application/vnd.docker.distribution.manifest.v2+json"
+
+# List tags
+reqsmith get https://registry-1.docker.io/v2/library/nginx/tags/list \
+  --header "Authorization: Bearer $TOKEN"
+```
+
+## Jira Integration
+
+### Issue Management
+
+```bash
+# Create Jira issue
+reqsmith post https://your-domain.atlassian.net/rest/api/3/issue \
+  --header "Authorization: Basic $JIRA_AUTH" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "fields": {
+      "project": {"key": "TEST"},
+      "summary": "API Integration Issue",
+      "description": "Created via ReqSmith API integration",
+      "issuetype": {"name": "Task"}
+    }
+  }'
+
+# Update issue
+reqsmith put https://your-domain.atlassian.net/rest/api/3/issue/TEST-123 \
+  --header "Authorization: Basic $JIRA_AUTH" \
+  --data '{
+    "fields": {
+      "summary": "Updated issue title",
+      "description": "Updated description"
+    }
+  }'
+
+# Add comment
+reqsmith post https://your-domain.atlassian.net/rest/api/3/issue/TEST-123/comment \
+  --header "Authorization: Basic $JIRA_AUTH" \
+  --data '{
+    "body": "API integration test comment"
+  }'
+```
+
+## Confluence Integration
+
+### Content Management
+
+```bash
+# Create page
+reqsmith post https://your-domain.atlassian.net/wiki/rest/api/content \
+  --header "Authorization: Basic $CONFLUENCE_AUTH" \
+  --data '{
+    "type": "page",
+    "title": "API Documentation",
+    "space": {"key": "DEV"},
+    "body": {
+      "storage": {
+        "value": "<h1>API Documentation</h1><p>Created via ReqSmith</p>",
+        "representation": "storage"
+      }
+    }
+  }'
+
+# Update page
+reqsmith put https://your-domain.atlassian.net/wiki/rest/api/content/PAGE_ID \
+  --header "Authorization: Basic $CONFLUENCE_AUTH" \
+  --data '{
+    "version": {"number": 2},
+    "title": "Updated API Documentation",
+    "type": "page",
+    "body": {
+      "storage": {
+        "value": "<h1>Updated Documentation</h1>",
+        "representation": "storage"
+      }
+    }
+  }'
+```
+
+## Telegram Bot Integration
+
+### Bot Messages and Notifications
+
+```bash
+# Send message
+reqsmith post "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+  --data '{
+    "chat_id": "CHAT_ID",
+    "text": "🚀 Deployment completed successfully!\n\nEnvironment: Production\nVersion: v1.2.3",
+    "parse_mode": "Markdown"
+  }'
+
+# Send document
+reqsmith post "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument" \
+  --form chat_id="CHAT_ID" \
+  --form caption="Deployment logs" \
+  --file document=@deployment.log
+```
+
+## Discord Webhook Integration
+
+### Server Notifications
+
+```bash
+# Send Discord webhook message
+reqsmith post $DISCORD_WEBHOOK_URL \
+  --data '{
+    "username": "ReqSmith Bot",
+    "avatar_url": "https://example.com/avatar.png",
+    "embeds": [{
+      "title": "API Deployment Status",
+      "description": "Production deployment completed",
+      "color": 3066993,
+      "fields": [{
+        "name": "Environment",
+        "value": "Production",
+        "inline": true
+      }, {
+        "name": "Version",
+        "value": "v1.2.3",
+        "inline": true
+      }],
+      "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%S.000Z)'"
+    }]
+  }'
+```
+
+## MongoDB Atlas API
+
+### Database Management
+
+```bash
+# Get cluster information
+reqsmith get "https://cloud.mongodb.com/api/atlas/v1.0/groups/GROUP_ID/clusters/CLUSTER_NAME" \
+  --header "Authorization: Basic $ATLAS_AUTH"
+
+# Create database user
+reqsmith post "https://cloud.mongodb.com/api/atlas/v1.0/groups/GROUP_ID/databaseUsers" \
+  --header "Authorization: Basic $ATLAS_AUTH" \
+  --data '{
+    "username": "api-user",
+    "password": "secure-password",
+    "roles": [{
+      "roleName": "readWrite",
+      "databaseName": "production"
+    }]
+  }'
+```
+
+## Twilio Integration
+
+### SMS and Voice Services
+
+```bash
+# Send SMS
+reqsmith post "https://api.twilio.com/2010-04-01/Accounts/$TWILIO_ACCOUNT_SID/Messages.json" \
+  --header "Authorization: Basic $(echo -n $TWILIO_ACCOUNT_SID:$TWILIO_AUTH_TOKEN | base64)" \
+  --data "From=+1234567890&To=+0987654321&Body=API alert: High error rate detected"
+
+# Make voice call
+reqsmith post "https://api.twilio.com/2010-04-01/Accounts/$TWILIO_ACCOUNT_SID/Calls.json" \
+  --header "Authorization: Basic $(echo -n $TWILIO_ACCOUNT_SID:$TWILIO_AUTH_TOKEN | base64)" \
+  --data "From=+1234567890&To=+0987654321&Url=http://example.com/voice-response.xml"
+```
+
+## SendGrid Email Integration
+
+### Email Automation
+
+```bash
+# Send email
+reqsmith post https://api.sendgrid.com/v3/mail/send \
+  --header "Authorization: Bearer $SENDGRID_API_KEY" \
+  --data '{
+    "personalizations": [{
+      "to": [{"email": "user@example.com"}],
+      "subject": "API Notification"
+    }],
+    "from": {"email": "noreply@yourapp.com"},
+    "content": [{
+      "type": "text/html",
+      "value": "<h1>Alert</h1><p>API response time exceeded threshold</p>"
+    }]
+  }'
+
+# Get email statistics
+reqsmith get "https://api.sendgrid.com/v3/stats?start_date=2024-01-01&end_date=2024-01-31" \
+  --header "Authorization: Bearer $SENDGRID_API_KEY"
+```
+
+## Datadog Integration
+
+### Monitoring and Metrics
+
+```bash
+# Send custom metric
+reqsmith post https://api.datadoghq.com/api/v1/series \
+  --header "DD-API-KEY: $DATADOG_API_KEY" \
+  --data '{
+    "series": [{
+      "metric": "api.response_time",
+      "points": [['$(date +%s)', 0.85]],
+      "tags": ["environment:production", "service:user-api"]
+    }]
+  }'
+
+# Create monitor
+reqsmith post https://api.datadoghq.com/api/v1/monitor \
+  --header "DD-API-KEY: $DATADOG_API_KEY" \
+  --header "DD-APPLICATION-KEY: $DATADOG_APP_KEY" \
+  --data '{
+    "type": "metric alert",
+    "query": "avg(last_5m):avg:api.response_time{service:user-api} > 2",
+    "name": "High API Response Time",
+    "message": "API response time is above 2 seconds"
+  }'
+```
+
+## Integration Best Practices
+
+### Authentication Management
+
+```bash
+# Store credentials securely
+reqsmith config set auth.github.token "$GITHUB_TOKEN" --encrypt
+reqsmith config set auth.slack.webhook "$SLACK_WEBHOOK" --encrypt
+
+# Use environment-specific credentials
+reqsmith env create production
+reqsmith env set production API_BASE_URL https://api.production.com
+reqsmith env set production API_TOKEN "$PROD_TOKEN" --encrypt
+
+reqsmith env create staging
+reqsmith env set staging API_BASE_URL https://api.staging.com
+reqsmith env set staging API_TOKEN "$STAGING_TOKEN" --encrypt
+```
+
+### Error Handling and Retries
+
+```bash
+# Robust integration with retries
+reqsmith post https://api.external-service.com/webhook \
+  --data '{"event": "deployment_completed"}' \
+  --retry 3 \
+  --retry-delay 5000 \
+  --on-error "echo 'Webhook failed, logging to file' >> webhook-errors.log"
+```
+
+### Rate Limiting
+
+```bash
+# Respect API rate limits
+for item in $(cat items.json | jq -r '.[]'); do
+  reqsmith post https://api.rate-limited.com/process \
+    --data "$item"
+  sleep 1  # 1 second delay between requests
+done
+```
+
+## Integration Testing
+
+### End-to-End Integration Tests
+
+```bash
+# Test complete integration flow
+test_github_integration() {
+  # Create repo
+  REPO_RESPONSE=$(reqsmith post https://api.github.com/user/repos \
+    --header "Authorization: Bearer $GITHUB_TOKEN" \
+    --data '{"name": "test-repo-$(date +%s)", "auto_init": true}')
+  
+  REPO_NAME=$(echo $REPO_RESPONSE | jq -r '.name')
+  
+  # Create issue
+  reqsmith post "https://api.github.com/repos/$(whoami)/$REPO_NAME/issues" \
+    --header "Authorization: Bearer $GITHUB_TOKEN" \
+    --data '{"title": "Test issue", "body": "Integration test"}'
+  
+  # Clean up
+  reqsmith delete "https://api.github.com/repos/$(whoami)/$REPO_NAME" \
+    --header "Authorization: Bearer $GITHUB_TOKEN"
+  
+  echo "✅ GitHub integration test passed"
+}
+
+test_github_integration
+```
+
+## Next Steps
+
+- Learn about [Team Workflows](/examples/team-workflows) for collaborative integration development
+- Explore [Real-World APIs](/examples/real-world-apis) for specific API implementation details
+- Check out [Advanced Scenarios](/examples/advanced-scenarios) for complex integration patterns

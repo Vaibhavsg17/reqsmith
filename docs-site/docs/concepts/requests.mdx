@@ -1,0 +1,402 @@
+---
+title: Making Requests
+description: "Learn how to make HTTP requests with ReqSmith"
+---
+
+# Making Requests
+
+ReqSmith provides a powerful and flexible way to make HTTP requests with support for all common methods, headers, authentication, and more.
+
+## Basic Request Structure
+
+All ReqSmith requests follow this basic pattern:
+
+```bash
+reqsmith request <method> <url> [options]
+```
+
+## HTTP Methods
+
+ReqSmith supports all standard HTTP methods:
+
+### GET Requests
+
+The most common request type for retrieving data:
+
+```bash
+# Simple GET request
+reqsmith request get https://api.github.com/users/octocat
+
+# GET with query parameters
+reqsmith request get https://httpbin.org/get \
+  --param "page=1" \
+  --param "limit=10"
+
+# GET with headers
+reqsmith request get https://api.github.com/user \
+  --header "Authorization: Bearer YOUR_TOKEN"
+```
+
+### POST Requests
+
+For creating resources or submitting data:
+
+```bash
+# POST with JSON data
+reqsmith request post https://httpbin.org/post \
+  --json '{"name": "John", "email": "john@example.com"}'
+
+# POST with form data
+reqsmith request post https://httpbin.org/post \
+  --data "name=John&email=john@example.com"
+
+# POST with file upload
+reqsmith request post https://httpbin.org/post \
+  --file user-data.json
+```
+
+### PUT Requests
+
+For updating existing resources:
+
+```bash
+# PUT with JSON data
+reqsmith request put https://api.example.com/users/123 \
+  --json '{"name": "Updated Name", "email": "new@example.com"}'
+
+# PUT with custom headers
+reqsmith request put https://api.example.com/users/123 \
+  --json '{"name": "John"}' \
+  --header "Content-Type: application/json" \
+  --header "Authorization: Bearer TOKEN"
+```
+
+### PATCH Requests
+
+For partial updates:
+
+```bash
+# PATCH with partial data
+reqsmith request patch https://api.example.com/users/123 \
+  --json '{"email": "newemail@example.com"}'
+```
+
+### DELETE Requests
+
+For removing resources:
+
+```bash
+# Simple DELETE
+reqsmith request delete https://api.example.com/users/123
+
+# DELETE with authentication
+reqsmith request delete https://api.example.com/users/123 \
+  --header "Authorization: Bearer YOUR_TOKEN"
+```
+
+### OPTIONS Requests
+
+For checking allowed methods and CORS:
+
+```bash
+reqsmith request options https://api.example.com/users
+```
+
+## Request Options
+
+### Headers
+
+Add custom headers to your requests:
+
+```bash
+# Single header
+reqsmith request get https://api.example.com \
+  --header "Accept: application/json"
+
+# Multiple headers
+reqsmith request get https://api.example.com \
+  --header "Accept: application/json" \
+  --header "User-Agent: MyApp/1.0" \
+  --header "Authorization: Bearer TOKEN"
+```
+
+### Query Parameters
+
+Add query parameters to URLs:
+
+```bash
+# Single parameter
+reqsmith request get https://api.example.com/search \
+  --param "q=javascript"
+
+# Multiple parameters
+reqsmith request get https://api.example.com/users \
+  --param "page=1" \
+  --param "limit=20" \
+  --param "sort=name"
+```
+
+### Request Body
+
+Different ways to send data in the request body:
+
+#### JSON Data
+```bash
+# Inline JSON
+reqsmith request post https://api.example.com/users \
+  --json '{"name": "John", "age": 30}'
+
+# JSON from file
+reqsmith request post https://api.example.com/users \
+  --file user.json
+```
+
+#### Form Data
+```bash
+# URL-encoded form data
+reqsmith request post https://api.example.com/login \
+  --data "username=john&password=secret"
+
+# Multipart form data
+reqsmith request post https://api.example.com/upload \
+  --form "file=@document.pdf" \
+  --form "title=My Document"
+```
+
+#### Raw Data
+```bash
+# Raw text data
+reqsmith request post https://api.example.com/webhook \
+  --data "raw text content" \
+  --header "Content-Type: text/plain"
+```
+
+## Response Handling
+
+### Output Formats
+
+Control how responses are displayed:
+
+```bash
+# Auto format (default) - detects JSON/XML automatically
+reqsmith request get https://api.github.com/users/octocat
+
+# Force JSON formatting
+reqsmith request get https://api.github.com/users/octocat --format json
+
+# Table format for structured data
+reqsmith request get https://api.github.com/users/octocat --format table
+
+# Raw format (no formatting)
+reqsmith request get https://api.github.com/users/octocat --format raw
+
+# XML format
+reqsmith request get https://httpbin.org/xml --format xml
+```
+
+### Save Responses
+
+Save responses to files:
+
+```bash
+# Save response body to file
+reqsmith request get https://api.github.com/users/octocat \
+  --output user-data.json
+
+# Save with custom filename
+reqsmith request get https://httpbin.org/image/png \
+  --output image.png
+```
+
+### Response Information
+
+View detailed response information:
+
+```bash
+# Show response headers
+reqsmith request get https://httpbin.org/get \
+  --show-headers
+
+# Show request/response timing
+reqsmith request get https://httpbin.org/get \
+  --show-timing
+
+# Verbose output (includes request details)
+reqsmith request get https://httpbin.org/get \
+  --verbose
+```
+
+## Advanced Features
+
+### Request Timeout
+
+Set custom timeouts:
+
+```bash
+# 30 second timeout
+reqsmith request get https://slow-api.example.com \
+  --timeout 30
+
+# No timeout (wait indefinitely)
+reqsmith request get https://api.example.com \
+  --timeout 0
+```
+
+### SSL/TLS Options
+
+Control SSL verification:
+
+```bash
+# Disable SSL verification (not recommended for production)
+reqsmith request get https://self-signed.example.com \
+  --no-verify-ssl
+
+# Use custom CA bundle
+reqsmith request get https://api.example.com \
+  --ca-bundle /path/to/ca-bundle.pem
+```
+
+### Follow Redirects
+
+Control redirect behavior:
+
+```bash
+# Don't follow redirects
+reqsmith request get https://httpbin.org/redirect/3 \
+  --no-follow-redirects
+
+# Limit number of redirects
+reqsmith request get https://httpbin.org/redirect/10 \
+  --max-redirects 5
+```
+
+### Caching
+
+Control response caching:
+
+```bash
+# Disable caching for this request
+reqsmith request get https://api.example.com/data \
+  --no-cache
+
+# Force cache refresh
+reqsmith request get https://api.example.com/data \
+  --refresh-cache
+```
+
+## Authentication
+
+### Bearer Token
+```bash
+reqsmith request get https://api.example.com/protected \
+  --header "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+### Basic Authentication
+```bash
+reqsmith request get https://httpbin.org/basic-auth/user/pass \
+  --header "Authorization: Basic $(echo -n 'user:pass' | base64)"
+```
+
+### API Key
+```bash
+# In header
+reqsmith request get https://api.example.com/data \
+  --header "X-API-Key: YOUR_API_KEY"
+
+# In query parameter
+reqsmith request get https://api.example.com/data \
+  --param "api_key=YOUR_API_KEY"
+```
+
+## Error Handling
+
+ReqSmith provides detailed error information:
+
+```bash
+# View detailed error information
+reqsmith request get https://httpbin.org/status/404 \
+  --verbose
+
+# Continue on error (useful for scripts)
+reqsmith request get https://invalid-url.example.com \
+  --continue-on-error
+```
+
+## GraphQL Requests
+
+ReqSmith has special support for GraphQL:
+
+```bash
+# GraphQL query
+reqsmith request graphql https://api.github.com/graphql \
+  --query 'query { viewer { login name } }' \
+  --header "Authorization: Bearer YOUR_TOKEN"
+
+# GraphQL mutation
+reqsmith request graphql https://api.example.com/graphql \
+  --query 'mutation { createUser(input: {name: "John"}) { id name } }' \
+  --variables '{"name": "John Doe"}'
+
+# GraphQL from file
+reqsmith request graphql https://api.example.com/graphql \
+  --query-file query.graphql \
+  --variables-file variables.json
+```
+
+## Batch Requests
+
+Execute multiple requests from a file:
+
+```bash
+# Create a batch file (requests.json)
+echo '[
+  {
+    "method": "GET",
+    "url": "https://httpbin.org/get",
+    "description": "Test GET request"
+  },
+  {
+    "method": "POST", 
+    "url": "https://httpbin.org/post",
+    "json": {"test": "data"},
+    "description": "Test POST request"
+  }
+]' > requests.json
+
+# Execute batch requests
+reqsmith request batch requests.json
+```
+
+## Request Validation
+
+ReqSmith can validate requests before sending:
+
+```bash
+# Validate JSON before sending
+reqsmith request post https://api.example.com/users \
+  --json '{"name": "John"}' \
+  --validate-json
+
+# Validate against OpenAPI schema
+reqsmith request post https://api.example.com/users \
+  --json '{"name": "John"}' \
+  --schema openapi.yaml
+```
+
+## Tips and Best Practices
+
+1. **Use environment variables** for sensitive data like API keys
+2. **Save frequently used requests as templates** for reuse
+3. **Use appropriate timeouts** for your network conditions
+4. **Enable caching** for better performance with repeated requests
+5. **Use table format** for better readability during development
+6. **Always validate SSL certificates** in production
+7. **Use batch requests** for testing multiple endpoints
+
+## Next Steps
+
+- Learn about [Templates](/concepts/templates) to save and reuse requests
+- Explore [Environment Management](/concepts/environments) for different configurations
+- Check out [Request History](/concepts/history) to track and replay requests
+- Set up [Caching](/concepts/caching) for better performance

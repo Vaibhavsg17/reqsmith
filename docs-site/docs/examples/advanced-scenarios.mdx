@@ -1,0 +1,477 @@
+---
+title: Advanced Scenarios
+description: "Complex workflows and advanced use cases with ReqSmith"
+---
+
+# Advanced Scenarios
+
+This page covers complex workflows and advanced use cases that demonstrate ReqSmith's powerful features for sophisticated API testing and automation scenarios.
+
+## Multi-Step API Workflows
+
+### User Registration and Authentication Flow
+
+```bash
+# Step 1: Register a new user
+reqsmith post https://api.example.com/auth/register \
+  --data '{"username": "testuser", "email": "test@example.com", "password": "securepass"}' \
+  --save-response registration.json
+
+# Step 2: Extract user ID from registration response
+USER_ID=$(cat registration.json | jq -r '.user.id')
+
+# Step 3: Login to get access token
+reqsmith post https://api.example.com/auth/login \
+  --data '{"email": "test@example.com", "password": "securepass"}' \
+  --save-response login.json
+
+# Step 4: Extract access token
+ACCESS_TOKEN=$(cat login.json | jq -r '.access_token')
+
+# Step 5: Get user profile with token
+reqsmith get "https://api.example.com/users/${USER_ID}" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+
+# Step 6: Update user profile
+reqsmith patch "https://api.example.com/users/${USER_ID}" \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}" \
+  --data '{"bio": "Updated via ReqSmith", "location": "Remote"}'
+```
+
+### E-commerce Order Processing
+
+```bash
+# Step 1: Get product catalog
+reqsmith get https://api.shop.com/products \
+  --save-response products.json
+
+# Step 2: Add items to cart
+reqsmith post https://api.shop.com/cart/add \
+  --header "Authorization: Bearer $TOKEN" \
+  --data '{"product_id": "prod-123", "quantity": 2}' \
+  --save-response cart.json
+
+# Step 3: Apply discount code
+reqsmith post https://api.shop.com/cart/discount \
+  --header "Authorization: Bearer $TOKEN" \
+  --data '{"code": "SAVE10"}' \
+  --save-response discount.json
+
+# Step 4: Create order
+reqsmith post https://api.shop.com/orders \
+  --header "Authorization: Bearer $TOKEN" \
+  --data @order-details.json \
+  --save-response order.json
+
+# Step 5: Process payment
+ORDER_ID=$(cat order.json | jq -r '.order_id')
+reqsmith post "https://api.shop.com/orders/${ORDER_ID}/payment" \
+  --header "Authorization: Bearer $TOKEN" \
+  --data @payment-info.json
+
+# Step 6: Check order status
+reqsmith get "https://api.shop.com/orders/${ORDER_ID}/status" \
+  --header "Authorization: Bearer $TOKEN"
+```
+
+## Batch Processing and Parallel Requests
+
+### Process Multiple Users
+
+```bash
+# Create multiple users in parallel
+for user in alice bob charlie diana; do
+  reqsmith post https://api.example.com/users \
+    --data "{\"username\": \"$user\", \"email\": \"$user@example.com\"}" \
+    --save-response "user-$user.json" &
+done
+wait # Wait for all background processes
+
+# Verify all users were created
+for user in alice bob charlie diana; do
+  USER_ID=$(cat "user-$user.json" | jq -r '.id')
+  reqsmith get "https://api.example.com/users/$USER_ID"
+done
+```
+
+### Bulk Data Operations
+
+```bash
+# Upload multiple files
+reqsmith template create bulk-upload
+echo 'POST https://api.example.com/files/upload
+Content-Type: multipart/form-data
+Authorization: Bearer {{token}}
+
+--file document=@{{filepath}}' > ~/.reqsmith/templates/bulk-upload.yaml
+
+# Execute for multiple files
+for file in *.pdf; do
+  reqsmith template run bulk-upload \
+    --var token="$ACCESS_TOKEN" \
+    --var filepath="$file" \
+    --save-response "upload-$(basename $file .pdf).json"
+done
+```
+
+## Complex Authentication Scenarios
+
+### OAuth 2.0 Flow
+
+```bash
+# Step 1: Get authorization URL
+reqsmith get "https://api.example.com/oauth/authorize?client_id=your-client-id&redirect_uri=http://localhost:8080/callback&response_type=code&scope=read:user"
+
+# Step 2: Exchange authorization code for token (after user authorization)
+AUTH_CODE="received-from-callback"
+reqsmith post https://api.example.com/oauth/token \
+  --data "grant_type=authorization_code&code=${AUTH_CODE}&client_id=your-client-id&client_secret=your-client-secret" \
+  --save-response oauth-token.json
+
+# Step 3: Extract access token
+ACCESS_TOKEN=$(cat oauth-token.json | jq -r '.access_token')
+REFRESH_TOKEN=$(cat oauth-token.json | jq -r '.refresh_token')
+
+# Step 4: Use access token for API calls
+reqsmith get https://api.example.com/user \
+  --header "Authorization: Bearer ${ACCESS_TOKEN}"
+
+# Step 5: Refresh token when needed
+reqsmith post https://api.example.com/oauth/token \
+  --data "grant_type=refresh_token&refresh_token=${REFRESH_TOKEN}&client_id=your-client-id&client_secret=your-client-secret" \
+  --save-response refreshed-token.json
+```
+
+### JWT Token Management
+
+```bash
+# Login and get JWT
+reqsmith post https://api.example.com/auth/login \
+  --data '{"username": "admin", "password": "secret"}' \
+  --save-response jwt-response.json
+
+# Extract JWT token
+JWT_TOKEN=$(cat jwt-response.json | jq -r '.token')
+
+# Decode JWT to check expiration (requires jq and base64)
+PAYLOAD=$(echo $JWT_TOKEN | cut -d'.' -f2 | base64 -d 2>/dev/null)
+EXPIRY=$(echo $PAYLOAD | jq -r '.exp')
+CURRENT=$(date +%s)
+
+if [ $CURRENT -gt $EXPIRY ]; then
+  echo "Token expired, refreshing..."
+  # Refresh token logic here
+fi
+
+# Use JWT for authenticated requests
+reqsmith get https://api.example.com/admin/users \
+  --header "Authorization: Bearer ${JWT_TOKEN}"
+```
+
+## API Testing and Validation
+
+### Comprehensive API Testing Suite
+
+```bash
+# Test API health
+reqsmith get https://api.example.com/health \
+  --expect-status 200 \
+  --expect-header "Content-Type: application/json"
+
+# Test user CRUD operations
+echo "Testing User CRUD operations..."
+
+# Create user
+reqsmith post https://api.example.com/users \
+  --data '{"name": "Test User", "email": "test@example.com"}' \
+  --expect-status 201 \
+  --save-response created-user.json
+
+USER_ID=$(cat created-user.json | jq -r '.id')
+
+# Read user
+reqsmith get "https://api.example.com/users/${USER_ID}" \
+  --expect-status 200 \
+  --expect-json '.name' "Test User"
+
+# Update user
+reqsmith patch "https://api.example.com/users/${USER_ID}" \
+  --data '{"name": "Updated User"}' \
+  --expect-status 200
+
+# Delete user
+reqsmith delete "https://api.example.com/users/${USER_ID}" \
+  --expect-status 204
+
+# Verify deletion
+reqsmith get "https://api.example.com/users/${USER_ID}" \
+  --expect-status 404
+```
+
+### Performance Testing
+
+```bash
+# Load testing with concurrent requests
+echo "Running load test..."
+
+# Function to make a request and measure time
+load_test() {
+  START_TIME=$(date +%s%N)
+  reqsmith get https://api.example.com/users \
+    --silent \
+    --header "Authorization: Bearer $TOKEN"
+  END_TIME=$(date +%s%N)
+  DURATION=$((($END_TIME - $START_TIME) / 1000000)) # Convert to milliseconds
+  echo "Request completed in ${DURATION}ms"
+}
+
+# Run 50 concurrent requests
+for i in {1..50}; do
+  load_test &
+done
+wait
+
+echo "Load test completed"
+```
+
+## Data Processing Workflows
+
+### ETL Pipeline with APIs
+
+```bash
+# Extract: Get data from source API
+reqsmith get https://source-api.com/data \
+  --header "API-Key: $SOURCE_API_KEY" \
+  --save-response raw-data.json
+
+# Transform: Process data with jq
+cat raw-data.json | jq '.items[] | {
+  id: .id,
+  name: .full_name,
+  email: .contact.email,
+  created: .created_at,
+  status: (if .active then "active" else "inactive" end)
+}' > transformed-data.json
+
+# Load: Send to destination API
+while IFS= read -r record; do
+  reqsmith post https://dest-api.com/records \
+    --header "Authorization: Bearer $DEST_TOKEN" \
+    --data "$record"
+  sleep 0.1 # Rate limiting
+done < <(jq -c '.[]' transformed-data.json)
+```
+
+### Data Synchronization
+
+```bash
+# Sync users between two systems
+echo "Starting user synchronization..."
+
+# Get users from source system
+reqsmith get https://system-a.com/users \
+  --header "Authorization: Bearer $SYSTEM_A_TOKEN" \
+  --save-response system-a-users.json
+
+# Get users from destination system
+reqsmith get https://system-b.com/users \
+  --header "Authorization: Bearer $SYSTEM_B_TOKEN" \
+  --save-response system-b-users.json
+
+# Find users that exist in A but not in B
+jq -r '.[] | select(.email as $email | 
+  ([input_filename, $email] as [$file, $e] | 
+  if $file == "system-b-users.json" then empty 
+  else $e end)) | .email' system-a-users.json system-b-users.json > users-to-sync.txt
+
+# Create missing users in system B
+while IFS= read -r email; do
+  USER_DATA=$(jq --arg email "$email" '.[] | select(.email == $email)' system-a-users.json)
+  reqsmith post https://system-b.com/users \
+    --header "Authorization: Bearer $SYSTEM_B_TOKEN" \
+    --data "$USER_DATA"
+done < users-to-sync.txt
+```
+
+## Monitoring and Alerting
+
+### API Health Monitoring
+
+```bash
+# Health check script
+check_api_health() {
+  local api_url=$1
+  local service_name=$2
+  
+  response=$(reqsmith get "$api_url/health" \
+    --timeout 5000 \
+    --silent \
+    --status-only)
+  
+  if [ "$response" = "200" ]; then
+    echo "✅ $service_name is healthy"
+    return 0
+  else
+    echo "❌ $service_name is unhealthy (status: $response)"
+    
+    # Send alert
+    reqsmith post https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK \
+      --data "{\"text\": \"🚨 $service_name health check failed - Status: $response\"}"
+    
+    return 1
+  fi
+}
+
+# Monitor multiple services
+check_api_health "https://api.example.com" "Main API"
+check_api_health "https://auth.example.com" "Auth Service"
+check_api_health "https://payments.example.com" "Payment Service"
+```
+
+### Performance Monitoring
+
+```bash
+# API performance monitoring
+monitor_performance() {
+  local endpoint=$1
+  local threshold_ms=$2
+  
+  start_time=$(date +%s%N)
+  reqsmith get "$endpoint" --silent > /dev/null
+  end_time=$(date +%s%N)
+  
+  duration_ms=$(( (end_time - start_time) / 1000000 ))
+  
+  if [ $duration_ms -gt $threshold_ms ]; then
+    echo "⚠️  Slow response: $endpoint took ${duration_ms}ms (threshold: ${threshold_ms}ms)"
+    
+    # Log to monitoring system
+    reqsmith post https://monitoring.example.com/metrics \
+      --data "{
+        \"metric\": \"api_response_time\",
+        \"value\": $duration_ms,
+        \"endpoint\": \"$endpoint\",
+        \"timestamp\": $(date +%s)
+      }"
+  fi
+}
+
+# Monitor critical endpoints
+monitor_performance "https://api.example.com/users" 1000
+monitor_performance "https://api.example.com/orders" 2000
+monitor_performance "https://api.example.com/payments" 500
+```
+
+## Advanced Template Usage
+
+### Dynamic Template with Conditions
+
+```yaml
+# weather-alert-template.yaml
+name: weather-alert
+description: Send weather alerts based on conditions
+
+request:
+  method: GET
+  url: https://api.weather.com/current
+  headers:
+    Authorization: Bearer {{weather_api_key}}
+  
+post_process:
+  - if: "{{response.temperature}} > 35"
+    then:
+      - method: POST
+        url: https://hooks.slack.com/services/{{slack_webhook}}
+        data:
+          text: "🌡️ High temperature alert: {{response.temperature}}°C"
+  
+  - if: "{{response.conditions}} == 'storm'"
+    then:
+      - method: POST
+        url: https://alerts.example.com/emergency
+        data:
+          type: "weather"
+          severity: "high"
+          message: "Storm warning in effect"
+```
+
+### Template with Loop Processing
+
+```yaml
+# bulk-user-creation.yaml
+name: bulk-user-creation
+description: Create multiple users from a data source
+
+variables:
+  users_file: users.json
+  
+steps:
+  - name: load_users
+    action: load_json
+    file: "{{users_file}}"
+    
+  - name: create_users
+    action: for_each
+    items: "{{load_users.result}}"
+    template:
+      method: POST
+      url: https://api.example.com/users
+      headers:
+        Authorization: Bearer {{api_token}}
+      data:
+        name: "{{item.name}}"
+        email: "{{item.email}}"
+        department: "{{item.department}}"
+    
+  - name: notify_completion
+    action: post
+    url: https://hooks.slack.com/services/{{slack_webhook}}
+    data:
+      text: "✅ Created {{create_users.success_count}} users, {{create_users.error_count}} errors"
+```
+
+## Best Practices for Advanced Scenarios
+
+1. **Error Handling**: Always include proper error handling and retry logic
+2. **Rate Limiting**: Respect API rate limits with delays between requests
+3. **Logging**: Log all operations for debugging and auditing
+4. **Security**: Never log sensitive data like tokens or passwords
+5. **Validation**: Validate responses before using data in subsequent requests
+6. **Idempotency**: Design workflows to be safe to re-run
+7. **Monitoring**: Include health checks and performance monitoring
+8. **Documentation**: Document complex workflows for team understanding
+
+## Troubleshooting Advanced Scenarios
+
+### Debug Complex Workflows
+
+```bash
+# Enable verbose logging
+export REQSMITH_LOG_LEVEL=debug
+
+# Run workflow with detailed output
+reqsmith template run complex-workflow --verbose --debug
+
+# Check logs
+tail -f ~/.reqsmith/logs/reqsmith.log
+```
+
+### Performance Analysis
+
+```bash
+# Profile API calls
+reqsmith get https://api.example.com/heavy-endpoint \
+  --timing \
+  --profile \
+  --save-response response.json \
+  --save-timing timing.json
+
+# Analyze timing data
+cat timing.json | jq '.dns_lookup, .tcp_connect, .ssl_handshake, .server_processing'
+```
+
+## Next Steps
+
+- Explore [Integration Patterns](/examples/integrations) for connecting with popular services
+- Learn about [Team Workflows](/examples/team-workflows) for collaborative API development
+- Check out [Real-World APIs](/examples/real-world-apis) for practical implementation examples

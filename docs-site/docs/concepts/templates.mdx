@@ -1,0 +1,502 @@
+---
+title: Templates
+description: "Save and reuse request configurations with ReqSmith templates"
+---
+
+# Templates
+
+Templates allow you to save request configurations and reuse them with different variables. This is perfect for API testing, where you often need to make similar requests with different parameters.
+
+## What are Templates?
+
+A template is a saved request configuration that can include:
+- HTTP method and URL
+- Headers and query parameters
+- Request body
+- Variables for dynamic values
+- Metadata like description and tags
+
+## Creating Templates
+
+### Basic Template Creation
+
+Save a simple GET request as a template:
+
+```bash
+reqsmith template save github-user \
+  --method GET \
+  --url "https://api.github.com/users/${USERNAME}" \
+  --header "Accept: application/vnd.github.v3+json" \
+  --description "Get GitHub user information"
+```
+
+### Template with POST Data
+
+Save a POST request with JSON body:
+
+```bash
+reqsmith template save create-user \
+  --method POST \
+  --url "https://api.example.com/users" \
+  --json '{"name": "${NAME}", "email": "${EMAIL}", "role": "${ROLE}"}' \
+  --header "Content-Type: application/json" \
+  --header "Authorization: Bearer ${API_TOKEN}" \
+  --description "Create a new user"
+```
+
+### Template with Query Parameters
+
+Save a request with parameterized query string:
+
+```bash
+reqsmith template save search-repos \
+  --method GET \
+  --url "https://api.github.com/search/repositories" \
+  --param "q=${QUERY}" \
+  --param "sort=${SORT}" \
+  --param "per_page=${PER_PAGE}" \
+  --description "Search GitHub repositories"
+```
+
+## Variable Substitution
+
+Templates use `${VARIABLE_NAME}` syntax for variables:
+
+### Variable Types
+
+1. **Required Variables**: Must be provided when using the template
+2. **Optional Variables**: Have default values
+3. **Environment Variables**: Loaded from active environment
+
+### Default Values
+
+Set default values for variables:
+
+```bash
+reqsmith template save api-endpoint \
+  --method GET \
+  --url "https://api.example.com/${ENDPOINT}" \
+  --param "page=${PAGE:1}" \
+  --param "limit=${LIMIT:20}" \
+  --header "Authorization: Bearer ${API_TOKEN}" \
+  --description "Generic API endpoint with pagination"
+```
+
+## Using Templates
+
+### Basic Usage
+
+Execute a template with variables:
+
+```bash
+reqsmith template use github-user --var USERNAME=octocat
+```
+
+### Multiple Variables
+
+Provide multiple variables:
+
+```bash
+reqsmith template use create-user \
+  --var NAME="John Doe" \
+  --var EMAIL="john@example.com" \
+  --var ROLE="admin" \
+  --var API_TOKEN="your-token-here"
+```
+
+### Using with Environment
+
+Combine template variables with environment variables:
+
+```bash
+# Set up environment first
+reqsmith env create production
+reqsmith env set API_TOKEN "prod-token-123"
+reqsmith env switch production
+
+# Use template with environment
+reqsmith template use create-user \
+  --var NAME="Production User" \
+  --var EMAIL="prod@example.com" \
+  --var ROLE="user" \
+  --env production
+```
+
+### Override Template Settings
+
+Override template settings at execution time:
+
+```bash
+reqsmith template use github-user \
+  --var USERNAME=octocat \
+  --header "User-Agent: MyApp/1.0" \
+  --timeout 30
+```
+
+## Template Management
+
+### List Templates
+
+View all your templates:
+
+```bash
+# List all templates
+reqsmith template list
+
+# List with details
+reqsmith template list --details
+
+# Filter by tags
+reqsmith template list --tag "api-v2"
+
+# Sort by usage count
+reqsmith template list --sort usage
+```
+
+### View Template Details
+
+Show detailed information about a template:
+
+```bash
+reqsmith template show github-user
+```
+
+### Search Templates
+
+Find templates by name or description:
+
+```bash
+# Search by name
+reqsmith template search "github"
+
+# Search by description
+reqsmith template search "user"
+
+# Search by tag
+reqsmith template search --tag "github-api"
+```
+
+### Template Statistics
+
+View usage statistics:
+
+```bash
+# Show statistics for all templates
+reqsmith template stats
+
+# Show statistics for specific template
+reqsmith template stats github-user
+```
+
+## Template Organization
+
+### Tags
+
+Use tags to organize your templates:
+
+```bash
+reqsmith template save github-user-repos \
+  --method GET \
+  --url "https://api.github.com/users/${USERNAME}/repos" \
+  --tag "github-api" \
+  --tag "user-management" \
+  --tag "v3-api" \
+  --description "Get user repositories"
+```
+
+Search and filter by tags:
+
+```bash
+# List templates with specific tag
+reqsmith template list --tag "github-api"
+
+# List templates with multiple tags
+reqsmith template list --tag "github-api" --tag "v3-api"
+```
+
+### Naming Conventions
+
+Use descriptive names with consistent patterns:
+
+```bash
+# Good naming examples
+reqsmith template save github-user-get
+reqsmith template save github-user-repos-list
+reqsmith template save api-v2-users-create
+reqsmith template save webhook-send-notification
+```
+
+## Advanced Template Features
+
+### Complex JSON Bodies
+
+Templates can handle complex JSON structures:
+
+```bash
+reqsmith template save complex-user \
+  --method POST \
+  --url "https://api.example.com/users" \
+  --json '{
+    "personal_info": {
+      "name": "${NAME}",
+      "email": "${EMAIL}",
+      "age": ${AGE}
+    },
+    "preferences": {
+      "theme": "${THEME:light}",
+      "notifications": ${NOTIFICATIONS:true}
+    },
+    "metadata": {
+      "created_by": "${CREATED_BY}",
+      "tags": ["${TAG1}", "${TAG2}"]
+    }
+  }'
+```
+
+### File-based Bodies
+
+Use file contents as request body:
+
+```bash
+# Save template that reads body from file
+reqsmith template save upload-document \
+  --method POST \
+  --url "https://api.example.com/documents" \
+  --file "${DOCUMENT_PATH}" \
+  --header "Content-Type: ${CONTENT_TYPE}" \
+  --description "Upload document from file"
+
+# Use the template
+reqsmith template use upload-document \
+  --var DOCUMENT_PATH="./report.pdf" \
+  --var CONTENT_TYPE="application/pdf"
+```
+
+### Conditional Headers
+
+Use variables in headers:
+
+```bash
+reqsmith template save authenticated-request \
+  --method GET \
+  --url "https://api.example.com/${ENDPOINT}" \
+  --header "Authorization: ${AUTH_TYPE} ${TOKEN}" \
+  --header "X-Client-Version: ${CLIENT_VERSION:1.0}" \
+  --description "Generic authenticated request"
+```
+
+## Template Import/Export
+
+### Export Templates
+
+Share templates with your team:
+
+```bash
+# Export all templates
+reqsmith template export all-templates.json
+
+# Export specific templates
+reqsmith template export user-templates.json \
+  --template github-user \
+  --template create-user
+
+# Export by tag
+reqsmith template export api-templates.json --tag "api-v2"
+
+# Export in different formats
+reqsmith template export templates.yaml --format yaml
+reqsmith template export templates.postman.json --format postman
+```
+
+### Import Templates
+
+Import templates from files:
+
+```bash
+# Import templates
+reqsmith template import templates.json
+
+# Import with merge (don't overwrite existing)
+reqsmith template import templates.json --merge
+
+# Import from different formats
+reqsmith template import collection.postman.json --format postman
+reqsmith template import requests.yaml --format yaml
+```
+
+### Template Formats
+
+ReqSmith supports multiple template formats:
+
+#### Native JSON Format
+```json
+{
+  "name": "github-user",
+  "method": "GET",
+  "url": "https://api.github.com/users/${USERNAME}",
+  "headers": {
+    "Accept": "application/vnd.github.v3+json"
+  },
+  "description": "Get GitHub user information",
+  "tags": ["github-api", "user-management"]
+}
+```
+
+#### Postman Collection Import
+```bash
+# Import from Postman collection
+reqsmith template import postman-collection.json --format postman
+```
+
+## Template Validation
+
+### Validate Template Syntax
+
+Check template for errors before saving:
+
+```bash
+reqsmith template validate \
+  --method POST \
+  --url "https://api.example.com/users" \
+  --json '{"name": "${NAME}", "email": "${EMAIL}"}'
+```
+
+### Test Template Execution
+
+Dry-run template execution:
+
+```bash
+reqsmith template use github-user \
+  --var USERNAME=octocat \
+  --dry-run
+```
+
+## Template Best Practices
+
+### 1. Use Descriptive Names
+```bash
+# Good
+reqsmith template save github-user-repos-list
+
+# Avoid
+reqsmith template save template1
+```
+
+### 2. Add Meaningful Descriptions
+```bash
+reqsmith template save api-endpoint \
+  --description "Fetch user data from API v2 with pagination support"
+```
+
+### 3. Use Consistent Variable Names
+```bash
+# Use consistent naming across templates
+${API_TOKEN}     # not ${TOKEN} or ${API_KEY}
+${USER_ID}       # not ${ID} or ${USERID}
+${BASE_URL}      # not ${URL} or ${ENDPOINT}
+```
+
+### 4. Provide Default Values
+```bash
+reqsmith template save paginated-list \
+  --param "page=${PAGE:1}" \
+  --param "limit=${LIMIT:20}"
+```
+
+### 5. Use Tags for Organization
+```bash
+reqsmith template save user-endpoint \
+  --tag "user-management" \
+  --tag "api-v2" \
+  --tag "production"
+```
+
+### 6. Document Required Variables
+```bash
+reqsmith template save complex-endpoint \
+  --description "Create user - requires: NAME, EMAIL, ROLE, API_TOKEN"
+```
+
+## Common Template Patterns
+
+### REST API CRUD Operations
+
+```bash
+# Create
+reqsmith template save users-create \
+  --method POST \
+  --url "${API_BASE}/users" \
+  --json '{"name": "${NAME}", "email": "${EMAIL}"}' \
+  --header "Authorization: Bearer ${API_TOKEN}"
+
+# Read
+reqsmith template save users-get \
+  --method GET \
+  --url "${API_BASE}/users/${USER_ID}" \
+  --header "Authorization: Bearer ${API_TOKEN}"
+
+# Update
+reqsmith template save users-update \
+  --method PUT \
+  --url "${API_BASE}/users/${USER_ID}" \
+  --json '{"name": "${NAME}", "email": "${EMAIL}"}' \
+  --header "Authorization: Bearer ${API_TOKEN}"
+
+# Delete
+reqsmith template save users-delete \
+  --method DELETE \
+  --url "${API_BASE}/users/${USER_ID}" \
+  --header "Authorization: Bearer ${API_TOKEN}"
+```
+
+### Authentication Templates
+
+```bash
+# Login
+reqsmith template save auth-login \
+  --method POST \
+  --url "${AUTH_BASE}/login" \
+  --json '{"username": "${USERNAME}", "password": "${PASSWORD}"}'
+
+# Refresh token
+reqsmith template save auth-refresh \
+  --method POST \
+  --url "${AUTH_BASE}/refresh" \
+  --header "Authorization: Bearer ${REFRESH_TOKEN}"
+```
+
+### Health Check Templates
+
+```bash
+reqsmith template save health-check \
+  --method GET \
+  --url "${API_BASE}/health" \
+  --timeout 5 \
+  --description "API health check endpoint"
+```
+
+## Troubleshooting Templates
+
+### Common Issues
+
+1. **Variable not substituted**: Check variable name spelling and case
+2. **Invalid JSON**: Validate JSON syntax in request body
+3. **Template not found**: Verify template name and use `reqsmith template list`
+4. **Permission errors**: Check if template file is writable
+
+### Debug Template Execution
+
+```bash
+# Show what would be executed
+reqsmith template use my-template --var VAR=value --dry-run
+
+# Enable debug output
+reqsmith template use my-template --var VAR=value --debug
+```
+
+## Next Steps
+
+- Learn about [Environment Management](/concepts/environments) to manage variables
+- Explore [Request History](/concepts/history) to track template usage
+- Check out [Examples](/examples/api-testing-workflow) for complete workflows
+- Set up [Batch Requests](/advanced/batch-requests) for testing multiple templates

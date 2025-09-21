@@ -1,0 +1,827 @@
+---
+title: Configuration Commands
+description: "Complete reference for ReqSmith's configuration and settings management commands"
+---
+
+# Configuration Commands
+
+ReqSmith's configuration system allows you to customize behavior, set defaults, manage credentials, and optimize performance through a comprehensive set of configuration commands.
+
+## Configuration Overview
+
+### Viewing Configuration
+
+Display current configuration settings:
+
+```bash
+# Show all configuration
+reqsmith config show
+
+# Show specific section
+reqsmith config show --section network
+reqsmith config show --section auth
+reqsmith config show --section cache
+
+# Show only user-modified settings
+reqsmith config show --user-only
+
+# Show with default values
+reqsmith config show --with-defaults
+
+# Show in different formats
+reqsmith config show --format yaml
+reqsmith config show --format json
+```
+
+### Configuration Hierarchy
+
+ReqSmith uses a hierarchical configuration system:
+
+1. **Built-in defaults**: Core default values
+2. **System configuration**: System-wide settings
+3. **User configuration**: User-specific settings
+4. **Environment variables**: Environment-based overrides
+5. **Command-line options**: Runtime overrides
+
+```bash
+# Show effective configuration (all sources merged)
+reqsmith config show --effective
+
+# Show configuration sources
+reqsmith config sources
+
+# Show precedence order
+reqsmith config precedence
+
+# Debug configuration resolution
+reqsmith config debug-resolution network.timeout
+```
+
+## Setting Configuration
+
+### Basic Configuration
+
+Set individual configuration values:
+
+```bash
+# Set simple values
+reqsmith config set network.timeout 30000
+reqsmith config set cache.enabled true
+reqsmith config set output.format json
+
+# Set nested values
+reqsmith config set auth.oauth.auto_refresh true
+reqsmith config set history.cleanup.interval_days 30
+
+# Set array values
+reqsmith config set network.headers "User-Agent=ReqSmith/1.0,Accept=application/json"
+reqsmith config set cache.exclude_status_codes "401,403,500"
+
+# Set complex objects
+reqsmith config set auth.providers.github.client_id "your-client-id"
+```
+
+### Environment Variables
+
+Use environment variables for configuration:
+
+```bash
+# Set via environment variable
+export REQSMITH_NETWORK_TIMEOUT=30000
+export REQSMITH_CACHE_ENABLED=true
+
+# Show environment variable mapping
+reqsmith config env-vars
+
+# Set from environment variable
+reqsmith config set api.token "${API_TOKEN}"
+
+# Use environment-specific config
+reqsmith config set-env production api.base_url "https://api.prod.com"
+```
+
+### Configuration Files
+
+Manage configuration files:
+
+```bash
+# Show configuration file locations
+reqsmith config locations
+
+# Edit configuration file
+reqsmith config edit
+
+# Edit specific section
+reqsmith config edit --section auth
+
+# Create configuration file
+reqsmith config create --template basic
+
+# Backup configuration
+reqsmith config backup config-backup.yaml
+
+# Restore configuration
+reqsmith config restore config-backup.yaml
+```
+
+## Configuration Sections
+
+### Network Configuration
+
+Configure network behavior:
+
+```bash
+# Timeout settings
+reqsmith config set network.timeout 30000
+reqsmith config set network.connect_timeout 5000
+
+# Retry configuration
+reqsmith config set network.retry_attempts 3
+reqsmith config set network.retry_delay 1000
+reqsmith config set network.retry_exponential true
+
+# SSL/TLS settings
+reqsmith config set network.verify_ssl true
+reqsmith config set network.ca_bundle_path "/path/to/ca-bundle.pem"
+
+# Proxy configuration
+reqsmith config set network.proxy.http "http://proxy.example.com:8080"
+reqsmith config set network.proxy.https "https://proxy.example.com:8080"
+reqsmith config set network.proxy.no_proxy "localhost,127.0.0.1"
+
+# Connection settings
+reqsmith config set network.connection_pool_size 10
+reqsmith config set network.keep_alive true
+```
+
+### Authentication Configuration
+
+Configure authentication settings:
+
+```bash
+# Default authentication
+reqsmith config set auth.default_type bearer
+reqsmith config set auth.default_header "Authorization"
+
+# OAuth settings
+reqsmith config set auth.oauth.auto_refresh true
+reqsmith config set auth.oauth.refresh_threshold 300
+
+# Credential storage
+reqsmith config set auth.credential_store encrypted
+reqsmith config set auth.encryption_key_file "~/.reqsmith/auth.key"
+
+# Provider configuration
+reqsmith config set auth.providers.github.client_id "your-client-id"
+reqsmith config set auth.providers.github.scopes "user:email,repo"
+```
+
+### Cache Configuration
+
+Configure caching behavior:
+
+```bash
+# Enable/disable caching
+reqsmith config set cache.enabled true
+
+# Cache sizes
+reqsmith config set cache.memory_size_mb 100
+reqsmith config set cache.disk_size_mb 500
+reqsmith config set cache.max_entries 10000
+
+# TTL settings
+reqsmith config set cache.default_ttl 3600
+reqsmith config set cache.get_ttl 7200
+reqsmith config set cache.post_ttl 300
+
+# Cache strategy
+reqsmith config set cache.strategy cache-first
+reqsmith config set cache.validation.use_etag true
+reqsmith config set cache.validation.use_last_modified true
+
+# Cache exclusions
+reqsmith config set cache.exclude_headers "Authorization,Cookie"
+reqsmith config set cache.exclude_status_codes "401,403,500"
+```
+
+### History Configuration
+
+Configure request history:
+
+```bash
+# Enable/disable history
+reqsmith config set history.enabled true
+
+# Storage settings
+reqsmith config set history.max_entries 50000
+reqsmith config set history.storage_path "~/.reqsmith/history"
+
+# What to store
+reqsmith config set history.store_request_body true
+reqsmith config set history.store_response_body true
+reqsmith config set history.store_headers true
+
+# Cleanup settings
+reqsmith config set history.auto_cleanup true
+reqsmith config set history.cleanup_interval_days 30
+reqsmith config set history.retention_days 90
+
+# Privacy settings
+reqsmith config set history.exclude_headers "Authorization,X-API-Key"
+reqsmith config set history.exclude_urls "*/auth/*,*/login"
+reqsmith config set history.encrypt_data true
+```
+
+### Output Configuration
+
+Configure output formatting:
+
+```bash
+# Default output format
+reqsmith config set output.format json
+reqsmith config set output.pretty true
+
+# Color settings
+reqsmith config set output.color auto
+reqsmith config set output.color_scheme dark
+
+# Verbosity
+reqsmith config set output.verbose false
+reqsmith config set output.show_headers false
+reqsmith config set output.show_timing false
+
+# Table formatting
+reqsmith config set output.table.max_width 120
+reqsmith config set output.table.truncate true
+```
+
+### Template Configuration
+
+Configure template behavior:
+
+```bash
+# Template paths
+reqsmith config set templates.search_paths "~/.reqsmith/templates,./templates"
+reqsmith config set templates.auto_reload true
+
+# Variable settings
+reqsmith config set templates.variable_delimiter "{{}}"
+reqsmith config set templates.strict_variables false
+
+# Execution settings
+reqsmith config set templates.parallel_execution true
+reqsmith config set templates.max_concurrent 5
+reqsmith config set templates.stop_on_error false
+```
+
+## Configuration Profiles
+
+### Profile Management
+
+Manage configuration profiles:
+
+```bash
+# List profiles
+reqsmith config profiles
+
+# Create new profile
+reqsmith config profile create development
+
+# Switch to profile
+reqsmith config profile use development
+
+# Show current profile
+reqsmith config profile current
+
+# Clone profile
+reqsmith config profile clone development testing
+
+# Delete profile
+reqsmith config profile delete testing
+```
+
+### Profile Operations
+
+Work with configuration profiles:
+
+```bash
+# Export profile
+reqsmith config profile export development dev-config.yaml
+
+# Import profile
+reqsmith config profile import staging-config.yaml --name staging
+
+# Merge profiles
+reqsmith config profile merge base development --output merged
+
+# Compare profiles
+reqsmith config profile compare development production
+
+# Reset profile to defaults
+reqsmith config profile reset development
+```
+
+### Environment-Specific Profiles
+
+Use profiles for different environments:
+
+```bash
+# Create environment-specific profiles
+reqsmith config profile create production --base default
+reqsmith config profile create staging --base production
+reqsmith config profile create development --base staging
+
+# Set environment-specific settings
+reqsmith config profile use production
+reqsmith config set network.timeout 60000
+reqsmith config set cache.ttl 7200
+
+reqsmith config profile use development
+reqsmith config set network.timeout 10000
+reqsmith config set output.verbose true
+```
+
+## Configuration Validation
+
+### Validate Configuration
+
+Ensure configuration is valid:
+
+```bash
+# Validate current configuration
+reqsmith config validate
+
+# Validate specific file
+reqsmith config validate config.yaml
+
+# Validate specific section
+reqsmith config validate --section network
+
+# Check for conflicts
+reqsmith config check-conflicts
+
+# Validate against schema
+reqsmith config validate --schema config-schema.json
+```
+
+### Configuration Testing
+
+Test configuration settings:
+
+```bash
+# Test network configuration
+reqsmith config test network
+
+# Test authentication
+reqsmith config test auth --provider github
+
+# Test cache configuration
+reqsmith config test cache
+
+# Test all configurations
+reqsmith config test-all
+
+# Dry run with configuration
+reqsmith config test --dry-run
+```
+
+### Configuration Diagnostics
+
+Diagnose configuration issues:
+
+```bash
+# Diagnose configuration problems
+reqsmith config diagnose
+
+# Check permissions
+reqsmith config check-permissions
+
+# Verify file locations
+reqsmith config verify-paths
+
+# Check environment variables
+reqsmith config check-env-vars
+
+# Show configuration health
+reqsmith config health
+```
+
+## Advanced Configuration
+
+### Configuration Templates
+
+Use configuration templates:
+
+```bash
+# List available templates
+reqsmith config templates
+
+# Create from template
+reqsmith config create --template api-testing
+
+# Save current config as template
+reqsmith config save-template my-template
+
+# Apply template
+reqsmith config apply-template api-testing --merge
+```
+
+### Dynamic Configuration
+
+Configure dynamic settings:
+
+```bash
+# Set conditional configuration
+reqsmith config set-conditional \
+  --condition "environment == production" \
+  --key network.timeout \
+  --value 60000
+
+# Set time-based configuration
+reqsmith config set-scheduled \
+  --schedule "business-hours" \
+  --key cache.enabled \
+  --value true
+
+# Set load-based configuration
+reqsmith config set-adaptive \
+  --metric response_time \
+  --threshold 2000 \
+  --key network.retry_attempts \
+  --value 5
+```
+
+### Configuration Hooks
+
+Set up configuration hooks:
+
+```bash
+# Pre-change hook
+reqsmith config set-hook pre-change \
+  --script "validate-config.sh"
+
+# Post-change hook
+reqsmith config set-hook post-change \
+  --script "restart-services.sh"
+
+# Validation hook
+reqsmith config set-hook validate \
+  --script "check-connectivity.py"
+
+# List hooks
+reqsmith config hooks
+
+# Remove hook
+reqsmith config remove-hook pre-change
+```
+
+## Configuration Import/Export
+
+### Export Configuration
+
+Export configuration for sharing:
+
+```bash
+# Export all configuration
+reqsmith config export config.yaml
+
+# Export specific sections
+reqsmith config export network-config.yaml --sections network,cache
+
+# Export without sensitive data
+reqsmith config export public-config.yaml --sanitize
+
+# Export with comments
+reqsmith config export documented-config.yaml --with-comments
+
+# Export in different formats
+reqsmith config export config.json --format json
+reqsmith config export config.toml --format toml
+```
+
+### Import Configuration
+
+Import configuration from files:
+
+```bash
+# Import configuration
+reqsmith config import config.yaml
+
+# Import with merge strategy
+reqsmith config import config.yaml --merge
+
+# Import specific sections
+reqsmith config import config.yaml --sections network,auth
+
+# Import with validation
+reqsmith config import config.yaml --validate
+
+# Import and backup current
+reqsmith config import config.yaml --backup
+```
+
+### Configuration Synchronization
+
+Sync configuration across systems:
+
+```bash
+# Sync with remote configuration
+reqsmith config sync --remote https://config.example.com/reqsmith
+
+# Sync with team configuration
+reqsmith config sync --team api-team
+
+# Sync specific sections
+reqsmith config sync --sections auth,network --remote config-server
+
+# Auto-sync configuration
+reqsmith config set sync.enabled true
+reqsmith config set sync.interval 3600
+reqsmith config set sync.remote "https://config.example.com"
+```
+
+## Configuration Security
+
+### Secure Configuration
+
+Protect sensitive configuration:
+
+```bash
+# Encrypt configuration file
+reqsmith config encrypt --password-file password.txt
+
+# Decrypt configuration file
+reqsmith config decrypt --password-file password.txt
+
+# Set file permissions
+reqsmith config set-permissions --mode 600
+
+# Audit configuration access
+reqsmith config audit --output audit.log
+
+# Check for sensitive data
+reqsmith config check-sensitive
+```
+
+### Credential Management
+
+Manage credentials in configuration:
+
+```bash
+# Store credential securely
+reqsmith config set-credential api.token --encrypt
+
+# Use credential manager
+reqsmith config use-credential-manager keyring
+
+# Set credential from environment
+reqsmith config set-credential api.token --from-env API_TOKEN
+
+# Rotate credentials
+reqsmith config rotate-credentials --provider github
+
+# List stored credentials
+reqsmith config list-credentials
+```
+
+## Configuration Automation
+
+### Automated Configuration
+
+Automate configuration management:
+
+```bash
+# Auto-detect optimal settings
+reqsmith config auto-optimize
+
+# Apply recommended settings
+reqsmith config apply-recommendations
+
+# Configure based on usage patterns
+reqsmith config adaptive-tuning --enable
+
+# Schedule configuration updates
+reqsmith config schedule-update --interval weekly
+
+# Auto-backup configuration
+reqsmith config auto-backup --interval daily
+```
+
+### Configuration Scripts
+
+Use scripts for configuration management:
+
+```bash
+# Run configuration script
+reqsmith config script run setup-development.sh
+
+# Schedule configuration script
+reqsmith config script schedule setup-production.sh --cron "0 2 * * *"
+
+# Validate with script
+reqsmith config script validate check-config.py
+
+# Create configuration script
+reqsmith config script create --template basic-setup
+```
+
+## Command Reference
+
+### Core Configuration Commands
+
+```bash
+# View configuration
+reqsmith config show                  # Show all configuration
+reqsmith config show --section NAME  # Show specific section
+reqsmith config get KEY               # Get specific value
+
+# Set configuration
+reqsmith config set KEY VALUE         # Set configuration value
+reqsmith config unset KEY             # Remove configuration value
+reqsmith config reset                 # Reset to defaults
+
+# File operations
+reqsmith config edit                  # Edit configuration file
+reqsmith config create                # Create configuration file
+reqsmith config backup FILE          # Backup configuration
+reqsmith config restore FILE         # Restore configuration
+
+# Validation and testing
+reqsmith config validate              # Validate configuration
+reqsmith config test                  # Test configuration
+reqsmith config diagnose              # Diagnose issues
+
+# Import/export
+reqsmith config export FILE          # Export configuration
+reqsmith config import FILE          # Import configuration
+reqsmith config sync                  # Sync configuration
+
+# Profiles
+reqsmith config profile create NAME   # Create profile
+reqsmith config profile use NAME      # Switch profile
+reqsmith config profile list          # List profiles
+```
+
+### Configuration Options
+
+```bash
+# Display options
+--section SECTION               # Specific configuration section
+--format FORMAT                 # Output format (yaml, json, toml)
+--with-defaults                 # Include default values
+--effective                     # Show effective configuration
+--user-only                     # Show only user settings
+
+# Modification options
+--merge                         # Merge with existing
+--backup                        # Backup before changes
+--validate                      # Validate after changes
+--encrypt                       # Encrypt sensitive data
+
+# Profile options
+--profile PROFILE               # Use specific profile
+--global                        # Apply globally
+--environment ENV               # Environment-specific
+
+# Import/export options
+--sanitize                      # Remove sensitive data
+--with-comments                 # Include documentation
+--sections LIST                 # Specific sections only
+--compress                      # Compress output
+```
+
+## Best Practices
+
+1. **Use profiles**: Create profiles for different environments and workflows
+2. **Version control**: Keep configuration files in version control
+3. **Document changes**: Use comments to explain custom settings
+4. **Regular validation**: Validate configuration regularly
+5. **Secure sensitive data**: Encrypt credentials and sensitive settings
+6. **Backup regularly**: Create regular configuration backups
+7. **Test changes**: Test configuration changes before applying
+8. **Monitor performance**: Optimize settings based on usage patterns
+9. **Team coordination**: Coordinate configuration changes with team
+10. **Use templates**: Create reusable configuration templates
+
+## Configuration Examples
+
+### Complete Configuration File
+
+```yaml
+# ~/.reqsmith/config.yaml
+# ReqSmith Configuration
+
+# Network settings
+network:
+  timeout: 30000
+  connect_timeout: 5000
+  retry_attempts: 3
+  retry_delay: 1000
+  retry_exponential: true
+  verify_ssl: true
+  keep_alive: true
+  connection_pool_size: 10
+  
+  proxy:
+    http: "http://proxy.example.com:8080"
+    https: "https://proxy.example.com:8080"
+    no_proxy: "localhost,127.0.0.1,.local"
+
+# Authentication
+auth:
+  default_type: bearer
+  credential_store: encrypted
+  encryption_key_file: "~/.reqsmith/auth.key"
+  
+  oauth:
+    auto_refresh: true
+    refresh_threshold: 300
+  
+  providers:
+    github:
+      client_id: "${GITHUB_CLIENT_ID}"
+      scopes: ["user:email", "repo"]
+
+# Caching
+cache:
+  enabled: true
+  memory_size_mb: 100
+  disk_size_mb: 500
+  default_ttl: 3600
+  strategy: cache-first
+  
+  validation:
+    use_etag: true
+    use_last_modified: true
+  
+  exclude_headers: ["Authorization", "Cookie"]
+  exclude_status_codes: [401, 403, 500]
+
+# History
+history:
+  enabled: true
+  max_entries: 50000
+  store_request_body: true
+  store_response_body: true
+  auto_cleanup: true
+  cleanup_interval_days: 30
+  retention_days: 90
+  
+  exclude_headers: ["Authorization", "X-API-Key"]
+  exclude_urls: ["*/auth/*", "*/login"]
+  encrypt_data: true
+
+# Output
+output:
+  format: json
+  pretty: true
+  color: auto
+  show_timing: false
+  
+  table:
+    max_width: 120
+    truncate: true
+
+# Templates
+templates:
+  search_paths: ["~/.reqsmith/templates", "./templates"]
+  auto_reload: true
+  variable_delimiter: "{{}}"
+  parallel_execution: true
+  max_concurrent: 5
+
+# AI features (optional)
+ai:
+  enabled: false
+  provider: gemini
+  model: gemini-pro
+  temperature: 0.3
+```
+
+### Environment-Specific Configuration
+
+```bash
+# Development configuration
+reqsmith config profile create development
+reqsmith config profile use development
+reqsmith config set network.timeout 10000
+reqsmith config set output.verbose true
+reqsmith config set cache.ttl 300
+reqsmith config set history.store_response_body true
+
+# Production configuration
+reqsmith config profile create production
+reqsmith config profile use production
+reqsmith config set network.timeout 60000
+reqsmith config set output.verbose false
+reqsmith config set cache.ttl 7200
+reqsmith config set history.encrypt_data true
+reqsmith config set auth.require_confirmation true
+```
+
+## Next Steps
+
+- Learn about [Request Commands](/cli/request) that use configuration settings
+- Explore [Environment Commands](/cli/env) for environment-specific configs
+- Check out [Template Commands](/cli/template) for template configuration
+- See [History Commands](/cli/history) for history configuration options

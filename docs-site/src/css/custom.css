@@ -1,0 +1,192 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #2e8555;
+  --ifm-color-primary-dark: #29784c;
+  --ifm-color-primary-darker: #277148;
+  --ifm-color-primary-darkest: #205d3b;
+  --ifm-color-primary-light: #33925d;
+  --ifm-color-primary-lighter: #359962;
+  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #25c2a0;
+  --ifm-color-primary-dark: #21af90;
+  --ifm-color-primary-darker: #1fa588;
+  --ifm-color-primary-darkest: #1a8870;
+  --ifm-color-primary-light: #29d5b0;
+  --ifm-color-primary-lighter: #32d8b4;
+  --ifm-color-primary-lightest: #4fddbf;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* ===== CLEAN SEARCH DESIGN ===== */
+
+/* Search Button */
+.DocSearch-Button {
+  background: #ffffff !important;
+  border: 2px solid #e0e0e0 !important;
+  border-radius: 8px !important;
+  color: #333333 !important;
+  font-weight: 500 !important;
+  padding: 8px 16px !important;
+  transition: all 0.2s ease !important;
+}
+
+.DocSearch-Button:hover {
+  background: #f5f5f5 !important;
+  border-color: #2e8555 !important;
+  color: #2e8555 !important;
+}
+
+/* Search Modal Container */
+.DocSearch-Container {
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Search Modal */
+.DocSearch-Modal {
+  background: #ffffff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+  border: none !important;
+  max-width: 600px !important;
+  margin: 50px auto !important;
+}
+
+/* Search Form */
+.DocSearch-Form {
+  background: #ffffff !important;
+  border: none !important;
+  border-bottom: 2px solid #f0f0f0 !important;
+  border-radius: 12px 12px 0 0 !important;
+  padding: 16px !important;
+}
+
+/* Search Input */
+.DocSearch-Input {
+  background: #ffffff !important;
+  color: #333333 !important;
+  font-size: 16px !important;
+  border: none !important;
+  outline: none !important;
+  padding: 8px 0 !important;
+}
+
+.DocSearch-Input::placeholder {
+  color: #999999 !important;
+}
+
+/* Search Results Container */
+.DocSearch-Dropdown {
+  background: #ffffff !important;
+  border-radius: 0 0 12px 12px !important;
+  padding: 8px !important;
+}
+
+/* Search Results */
+.DocSearch-Hit {
+  background: #ffffff !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  padding: 12px !important;
+  margin-bottom: 4px !important;
+}
+
+.DocSearch-Hit:hover,
+.DocSearch-Hit[aria-selected="true"] {
+  background: #f8f9fa !important;
+  border-color: #2e8555 !important;
+}
+
+.DocSearch-Hit-title {
+  color: #2e8555 !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+.DocSearch-Hit-path {
+  color: #666666 !important;
+  font-size: 12px !important;
+}
+
+.DocSearch-Hit-snippet {
+  color: #333333 !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+}
+
+/* Search Footer */
+.DocSearch-Footer {
+  background: #f8f9fa !important;
+  border-top: 1px solid #e0e0e0 !important;
+  border-radius: 0 0 12px 12px !important;
+  padding: 12px 16px !important;
+}
+
+/* Dark Mode */
+[data-theme='dark'] .DocSearch-Button {
+  background: #2d2d2d !important;
+  border-color: #444444 !important;
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .DocSearch-Button:hover {
+  background: #3d3d3d !important;
+  border-color: #25c2a0 !important;
+  color: #25c2a0 !important;
+}
+
+[data-theme='dark'] .DocSearch-Modal {
+  background: #1e1e1e !important;
+}
+
+[data-theme='dark'] .DocSearch-Form {
+  background: #1e1e1e !important;
+  border-bottom-color: #333333 !important;
+}
+
+[data-theme='dark'] .DocSearch-Input {
+  background: #1e1e1e !important;
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .DocSearch-Dropdown {
+  background: #1e1e1e !important;
+}
+
+[data-theme='dark'] .DocSearch-Hit {
+  background: #1e1e1e !important;
+}
+
+[data-theme='dark'] .DocSearch-Hit:hover,
+[data-theme='dark'] .DocSearch-Hit[aria-selected="true"] {
+  background: #2d2d2d !important;
+  border-color: #25c2a0 !important;
+}
+
+[data-theme='dark'] .DocSearch-Hit-title {
+  color: #25c2a0 !important;
+}
+
+[data-theme='dark'] .DocSearch-Hit-path {
+  color: #aaaaaa !important;
+}
+
+[data-theme='dark'] .DocSearch-Hit-snippet {
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .DocSearch-Footer {
+  background: #2d2d2d !important;
+  border-top-color: #444444 !important;
+}

@@ -1,0 +1,737 @@
+---
+title: Request Commands
+description: "Complete reference for ReqSmith's request commands (GET, POST, PUT, DELETE, etc.)"
+---
+
+# Request Commands
+
+ReqSmith provides comprehensive HTTP request commands that support all major HTTP methods with advanced features like authentication, headers, body content, and response handling.
+
+## Basic Request Commands
+
+### GET Requests
+
+Retrieve data from APIs:
+
+```bash
+# Simple GET request
+reqsmith get https://api.github.com/users/octocat
+
+# GET with query parameters
+reqsmith get https://api.github.com/users/octocat/repos?per_page=5
+
+# GET with custom headers
+reqsmith get https://api.github.com/user \
+  --header "Authorization: Bearer ghp_xxxxxxxxxxxx" \
+  --header "Accept: application/vnd.github.v3+json"
+
+# GET with timeout
+reqsmith get https://api.github.com/users/octocat --timeout 30
+```
+
+### POST Requests
+
+Send data to APIs:
+
+```bash
+# POST with JSON data
+reqsmith post https://api.example.com/users \
+  --json '{"name": "John Doe", "email": "john@example.com"}'
+
+# POST with form data
+reqsmith post https://api.example.com/users \
+  --form name="John Doe" email="john@example.com"
+
+# POST with file upload
+reqsmith post https://api.example.com/upload \
+  --file document=@document.pdf \
+  --file image=@image.jpg
+
+# POST with raw body
+reqsmith post https://api.example.com/webhook \
+  --body "Raw text content" \
+  --header "Content-Type: text/plain"
+```
+
+### PUT Requests
+
+Update existing resources:
+
+```bash
+# PUT with JSON data
+reqsmith put https://api.example.com/users/123 \
+  --json '{"name": "Jane Doe", "email": "jane@example.com"}'
+
+# PUT with file content
+reqsmith put https://api.example.com/documents/456 \
+  --data @document.json \
+  --header "Content-Type: application/json"
+
+# PUT with conditional headers
+reqsmith put https://api.example.com/users/123 \
+  --json '{"name": "Updated Name"}' \
+  --header "If-Match: W/\"12345\""
+```
+
+### DELETE Requests
+
+Remove resources:
+
+```bash
+# Simple DELETE
+reqsmith delete https://api.example.com/users/123
+
+# DELETE with confirmation
+reqsmith delete https://api.example.com/users/123 --confirm
+
+# DELETE with reason
+reqsmith delete https://api.example.com/posts/456 \
+  --header "X-Delete-Reason: Spam content"
+```
+
+### PATCH Requests
+
+Partial updates:
+
+```bash
+# PATCH with JSON data
+reqsmith patch https://api.example.com/users/123 \
+  --json '{"email": "newemail@example.com"}'
+
+# PATCH with JSON Patch format
+reqsmith patch https://api.example.com/users/123 \
+  --json '[{"op": "replace", "path": "/email", "value": "new@example.com"}]' \
+  --header "Content-Type: application/json-patch+json"
+```
+
+### HEAD Requests
+
+Get headers without body:
+
+```bash
+# HEAD request to check resource existence
+reqsmith head https://api.example.com/users/123
+
+# HEAD with custom headers
+reqsmith head https://api.example.com/large-file.zip \
+  --header "Range: bytes=0-1023"
+```
+
+### OPTIONS Requests
+
+Discover allowed methods:
+
+```bash
+# OPTIONS to check CORS
+reqsmith options https://api.example.com/users
+
+# OPTIONS with origin header
+reqsmith options https://api.example.com/users \
+  --header "Origin: https://myapp.com"
+```
+
+## Request Options
+
+### Headers
+
+Add custom headers to requests:
+
+```bash
+# Single header
+reqsmith get https://api.example.com/data \
+  --header "Authorization: Bearer token123"
+
+# Multiple headers
+reqsmith get https://api.example.com/data \
+  --header "Authorization: Bearer token123" \
+  --header "Accept: application/json" \
+  --header "User-Agent: MyApp/1.0"
+
+# Headers from file
+reqsmith get https://api.example.com/data \
+  --headers-file headers.json
+
+# Common header shortcuts
+reqsmith get https://api.example.com/data \
+  --auth-bearer token123 \
+  --accept json \
+  --user-agent "MyApp/1.0"
+```
+
+### Request Body
+
+Send various types of request bodies:
+
+```bash
+# JSON body
+reqsmith post https://api.example.com/users \
+  --json '{"name": "John", "age": 30}'
+
+# JSON from file
+reqsmith post https://api.example.com/users \
+  --json @user.json
+
+# Form data
+reqsmith post https://api.example.com/users \
+  --form name=John age=30
+
+# Form data with files
+reqsmith post https://api.example.com/upload \
+  --form name=John \
+  --form avatar=@avatar.jpg
+
+# Raw body
+reqsmith post https://api.example.com/webhook \
+  --body "Raw text content"
+
+# Body from file
+reqsmith post https://api.example.com/upload \
+  --data @document.txt
+
+# URL-encoded form
+reqsmith post https://api.example.com/login \
+  --form-urlencoded username=john password=secret
+```
+
+### Authentication
+
+Various authentication methods:
+
+```bash
+# Bearer token
+reqsmith get https://api.example.com/protected \
+  --auth-bearer "your-token-here"
+
+# Basic authentication
+reqsmith get https://api.example.com/protected \
+  --auth username:password
+
+# API key in header
+reqsmith get https://api.example.com/data \
+  --header "X-API-Key: your-api-key"
+
+# API key in query parameter
+reqsmith get "https://api.example.com/data?api_key=your-api-key"
+
+# Custom authentication header
+reqsmith get https://api.example.com/data \
+  --header "X-Custom-Auth: custom-value"
+```
+
+### Query Parameters
+
+Add query parameters to URLs:
+
+```bash
+# Single parameter
+reqsmith get https://api.example.com/users --param page=1
+
+# Multiple parameters
+reqsmith get https://api.example.com/users \
+  --param page=1 \
+  --param limit=10 \
+  --param sort=name
+
+# Parameters from file
+reqsmith get https://api.example.com/search \
+  --params-file search-params.json
+
+# URL encoding handling
+reqsmith get https://api.example.com/search \
+  --param q="hello world" \
+  --param filter="type:user"
+```
+
+## Advanced Request Features
+
+### Response Handling
+
+Control how responses are processed:
+
+```bash
+# Save response to file
+reqsmith get https://api.example.com/data --output response.json
+
+# Pretty print JSON responses
+reqsmith get https://api.example.com/data --pretty
+
+# Show only response headers
+reqsmith get https://api.example.com/data --headers-only
+
+# Show only response body
+reqsmith get https://api.example.com/data --body-only
+
+# Follow redirects
+reqsmith get https://api.example.com/redirect --follow-redirects
+
+# Don't follow redirects
+reqsmith get https://api.example.com/redirect --no-redirects
+```
+
+### Timeouts and Retries
+
+Configure timeout and retry behavior:
+
+```bash
+# Set request timeout (milliseconds)
+reqsmith get https://api.example.com/slow --timeout 30000
+
+# Set connection timeout
+reqsmith get https://api.example.com/data --connect-timeout 5000
+
+# Enable retries
+reqsmith get https://api.example.com/unreliable \
+  --retry 3 \
+  --retry-delay 1000
+
+# Retry with exponential backoff
+reqsmith get https://api.example.com/unreliable \
+  --retry 5 \
+  --retry-exponential \
+  --retry-max-delay 10000
+
+# Retry only on specific status codes
+reqsmith get https://api.example.com/data \
+  --retry 3 \
+  --retry-on-status 429,500,502,503
+```
+
+### SSL/TLS Options
+
+Configure SSL/TLS behavior:
+
+```bash
+# Skip SSL verification (development only)
+reqsmith get https://self-signed.example.com --insecure
+
+# Use custom CA bundle
+reqsmith get https://api.example.com/data \
+  --ca-bundle /path/to/ca-bundle.pem
+
+# Client certificate authentication
+reqsmith get https://api.example.com/secure \
+  --cert client.crt \
+  --key client.key
+
+# PKCS#12 certificate
+reqsmith get https://api.example.com/secure \
+  --cert client.p12 \
+  --cert-password "password"
+```
+
+### Proxy Configuration
+
+Use proxy servers:
+
+```bash
+# HTTP proxy
+reqsmith get https://api.example.com/data \
+  --proxy http://proxy.example.com:8080
+
+# HTTPS proxy with authentication
+reqsmith get https://api.example.com/data \
+  --proxy https://user:pass@proxy.example.com:8080
+
+# SOCKS proxy
+reqsmith get https://api.example.com/data \
+  --proxy socks5://proxy.example.com:1080
+
+# No proxy for specific domains
+reqsmith get https://internal.example.com/data --no-proxy
+```
+
+## Output Formatting
+
+### Response Formatting
+
+Format and display responses:
+
+```bash
+# JSON pretty printing
+reqsmith get https://api.example.com/data --format json
+
+# Table format for arrays
+reqsmith get https://api.example.com/users --format table
+
+# YAML format
+reqsmith get https://api.example.com/data --format yaml
+
+# Raw response (no formatting)
+reqsmith get https://api.example.com/data --format raw
+
+# Custom format with jq
+reqsmith get https://api.example.com/data --format jq --jq-filter '.data[]'
+```
+
+### Output Options
+
+Control output display:
+
+```bash
+# Colorized output
+reqsmith get https://api.example.com/data --color
+
+# No color output
+reqsmith get https://api.example.com/data --no-color
+
+# Quiet mode (minimal output)
+reqsmith get https://api.example.com/data --quiet
+
+# Verbose mode (detailed output)
+reqsmith get https://api.example.com/data --verbose
+
+# Show request details
+reqsmith get https://api.example.com/data --show-request
+
+# Show timing information
+reqsmith get https://api.example.com/data --show-timing
+```
+
+## File Operations
+
+### File Uploads
+
+Upload files with requests:
+
+```bash
+# Single file upload
+reqsmith post https://api.example.com/upload \
+  --file document=@document.pdf
+
+# Multiple file upload
+reqsmith post https://api.example.com/upload \
+  --file document=@document.pdf \
+  --file image=@image.jpg \
+  --file data=@data.json
+
+# File with custom content type
+reqsmith post https://api.example.com/upload \
+  --file "document=@document.xml;type=application/xml"
+
+# File from stdin
+cat document.json | reqsmith post https://api.example.com/upload \
+  --file document=@-
+```
+
+### File Downloads
+
+Download files from APIs:
+
+```bash
+# Download to file
+reqsmith get https://api.example.com/download/file.zip \
+  --output file.zip
+
+# Download with original filename
+reqsmith get https://api.example.com/download/file.zip \
+  --output-auto
+
+# Download to directory
+reqsmith get https://api.example.com/download/file.zip \
+  --output-dir ./downloads/
+
+# Streaming download (large files)
+reqsmith get https://api.example.com/large-file.zip \
+  --stream \
+  --output large-file.zip
+```
+
+## Environment Integration
+
+### Using with Environments
+
+Leverage environment configuration:
+
+```bash
+# Use specific environment
+reqsmith get /users --env production
+
+# Override environment base URL
+reqsmith get /users --env production --base-url https://api-v2.example.com
+
+# Use environment authentication
+reqsmith get /protected --env production  # Uses env auth
+
+# Override environment headers
+reqsmith get /data --env production \
+  --header "X-Debug: true"
+```
+
+### Variable Substitution
+
+Use variables in requests:
+
+```bash
+# Environment variables
+reqsmith get https://api.example.com/users/${USER_ID}
+
+# Command line variables
+reqsmith get https://api.example.com/users/{{user_id}} \
+  --var user_id=123
+
+# Variables from file
+reqsmith get https://api.example.com/users/{{user_id}} \
+  --vars-file variables.json
+```
+
+## Request Validation
+
+### Input Validation
+
+Validate request parameters:
+
+```bash
+# Validate JSON body
+reqsmith post https://api.example.com/users \
+  --json @user.json \
+  --validate-json
+
+# Validate against schema
+reqsmith post https://api.example.com/users \
+  --json @user.json \
+  --validate-schema user-schema.json
+
+# Dry run (validate without sending)
+reqsmith post https://api.example.com/users \
+  --json @user.json \
+  --dry-run
+```
+
+### Response Validation
+
+Validate API responses:
+
+```bash
+# Validate response status
+reqsmith get https://api.example.com/data \
+  --expect-status 200
+
+# Validate response headers
+reqsmith get https://api.example.com/data \
+  --expect-header "Content-Type: application/json"
+
+# Validate response body
+reqsmith get https://api.example.com/data \
+  --expect-json-key "data.users"
+
+# Validate response time
+reqsmith get https://api.example.com/data \
+  --expect-max-time 2000
+```
+
+## Performance Features
+
+### Caching
+
+Use caching for better performance:
+
+```bash
+# Enable caching
+reqsmith get https://api.example.com/data --cache
+
+# Cache with custom TTL
+reqsmith get https://api.example.com/data --cache --cache-ttl 3600
+
+# Force cache refresh
+reqsmith get https://api.example.com/data --no-cache
+
+# Cache only (don't make network request)
+reqsmith get https://api.example.com/data --cache-only
+```
+
+### Connection Optimization
+
+Optimize connection performance:
+
+```bash
+# Connection keep-alive
+reqsmith get https://api.example.com/data --keep-alive
+
+# Connection pooling
+reqsmith get https://api.example.com/data --connection-pool-size 10
+
+# HTTP/2 support
+reqsmith get https://api.example.com/data --http2
+
+# Compression
+reqsmith get https://api.example.com/data --compress
+```
+
+## Debugging and Analysis
+
+### Request Debugging
+
+Debug request issues:
+
+```bash
+# Verbose output
+reqsmith get https://api.example.com/data --verbose
+
+# Debug headers
+reqsmith get https://api.example.com/data --debug-headers
+
+# Show curl equivalent
+reqsmith get https://api.example.com/data --show-curl
+
+# Save request/response
+reqsmith get https://api.example.com/data --save-session session.json
+```
+
+### Performance Analysis
+
+Analyze request performance:
+
+```bash
+# Show timing breakdown
+reqsmith get https://api.example.com/data --timing
+
+# Performance metrics
+reqsmith get https://api.example.com/data --metrics
+
+# Profile request
+reqsmith get https://api.example.com/data --profile
+
+# Benchmark multiple requests
+reqsmith benchmark https://api.example.com/data --count 10
+```
+
+## Command Options Reference
+
+### Global Options
+
+Options available for all request commands:
+
+```bash
+# URL and method
+<url>                           # Target URL
+--method METHOD                 # HTTP method override
+
+# Headers and authentication
+--header "Name: Value"          # Custom header
+--headers-file FILE             # Headers from file
+--auth-bearer TOKEN             # Bearer token auth
+--auth USER:PASS                # Basic authentication
+
+# Request body
+--json DATA                     # JSON body
+--form KEY=VALUE                # Form data
+--file KEY=@FILE                # File upload
+--data @FILE                    # Raw body from file
+--body TEXT                     # Raw body text
+
+# Parameters
+--param KEY=VALUE               # Query parameter
+--params-file FILE              # Parameters from file
+
+# Response handling
+--output FILE                   # Save response to file
+--format FORMAT                 # Output format (json, table, yaml)
+--pretty                        # Pretty print output
+--headers-only                  # Show only headers
+--body-only                     # Show only body
+
+# Network options
+--timeout MS                    # Request timeout
+--connect-timeout MS            # Connection timeout
+--retry COUNT                   # Retry attempts
+--retry-delay MS                # Retry delay
+--proxy URL                     # Proxy server
+--insecure                      # Skip SSL verification
+
+# Environment
+--env NAME                      # Use environment
+--var KEY=VALUE                 # Variable override
+--vars-file FILE                # Variables from file
+
+# Output control
+--verbose                       # Verbose output
+--quiet                         # Minimal output
+--color / --no-color            # Color output
+--show-request                  # Show request details
+--show-timing                   # Show timing info
+
+# Validation
+--expect-status CODE            # Expected status code
+--expect-header "Name: Value"   # Expected header
+--dry-run                       # Validate without sending
+--validate-json                 # Validate JSON syntax
+
+# Performance
+--cache                         # Enable caching
+--cache-ttl SECONDS             # Cache TTL
+--no-cache                      # Force cache refresh
+--keep-alive                    # Connection keep-alive
+--compress                      # Enable compression
+```
+
+### Method-Specific Options
+
+Some options are specific to certain HTTP methods:
+
+```bash
+# POST/PUT/PATCH specific
+--json-merge                    # Merge with existing data
+--upsert                        # Create or update
+
+# DELETE specific
+--confirm                       # Confirm before deletion
+--force                         # Force deletion
+
+# GET specific
+--if-modified-since DATE        # Conditional GET
+--if-none-match ETAG            # Conditional GET
+
+# HEAD specific
+--max-redirects COUNT           # Maximum redirects to follow
+```
+
+## Best Practices
+
+1. **Use environments**: Configure common settings in environments
+2. **Leverage caching**: Enable caching for repeated requests
+3. **Handle errors**: Use appropriate retry and timeout settings
+4. **Secure credentials**: Use environment variables for sensitive data
+5. **Validate inputs**: Use validation options to catch errors early
+6. **Format output**: Use appropriate output formats for your needs
+7. **Debug systematically**: Use verbose and debug options for troubleshooting
+8. **Optimize performance**: Use connection pooling and compression
+9. **Document requests**: Save important requests as templates
+10. **Monitor performance**: Use timing and metrics options
+
+## Examples
+
+### Real-world Examples
+
+```bash
+# GitHub API - Get user repositories
+reqsmith get https://api.github.com/users/octocat/repos \
+  --header "Accept: application/vnd.github.v3+json" \
+  --param per_page=50 \
+  --format table
+
+# REST API - Create new user
+reqsmith post https://api.example.com/users \
+  --json '{"name": "John Doe", "email": "john@example.com"}' \
+  --header "Content-Type: application/json" \
+  --expect-status 201
+
+# File upload with metadata
+reqsmith post https://api.example.com/documents \
+  --form title="My Document" \
+  --form description="Important document" \
+  --file document=@report.pdf \
+  --auth-bearer "${API_TOKEN}"
+
+# API health check with timeout
+reqsmith get https://api.example.com/health \
+  --timeout 5000 \
+  --expect-status 200 \
+  --expect-header "Content-Type: application/json"
+```
+
+## Next Steps
+
+- Learn about [Template Commands](/cli/template) for reusable requests
+- Explore [Environment Commands](/cli/env) for managing configurations
+- Check out [History Commands](/cli/history) for tracking requests
+- See [Configuration Commands](/cli/config) for customizing behavior

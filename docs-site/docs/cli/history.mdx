@@ -1,0 +1,749 @@
+---
+title: History Commands
+description: "Complete reference for ReqSmith's request history and tracking commands"
+---
+
+# History Commands
+
+ReqSmith automatically tracks all API requests and provides comprehensive history management, including search, analysis, replay, and export capabilities for debugging and workflow optimization.
+
+## History Overview
+
+### Viewing History
+
+Display request history with various filters:
+
+```bash
+# Show recent requests (default: last 10)
+reqsmith history
+
+# Show specific number of requests
+reqsmith history --limit 20
+
+# Show requests from specific time period
+reqsmith history --days 7
+reqsmith history --since "2023-12-01"
+reqsmith history --since "24 hours ago"
+
+# Show detailed history
+reqsmith history --details
+
+# Show with full request/response bodies
+reqsmith history --full
+```
+
+### History Filters
+
+Filter history by various criteria:
+
+```bash
+# Filter by HTTP method
+reqsmith history --method GET
+reqsmith history --method POST,PUT
+
+# Filter by status code
+reqsmith history --status 200
+reqsmith history --status 4xx  # All 4xx errors
+reqsmith history --status 5xx  # All 5xx errors
+
+# Filter by URL pattern
+reqsmith history --url "api.github.com"
+reqsmith history --url "*/users/*"
+reqsmith history --url-regex "https://api\..*\.com"
+
+# Filter by environment
+reqsmith history --env production
+reqsmith history --env staging,development
+
+# Filter by template
+reqsmith history --template github-api
+reqsmith history --template-pattern "github*"
+```
+
+### Combined Filters
+
+Combine multiple filters for precise results:
+
+```bash
+# GET requests to GitHub API in last 3 days
+reqsmith history \
+  --method GET \
+  --url "api.github.com" \
+  --days 3
+
+# Failed requests from production
+reqsmith history \
+  --status 4xx,5xx \
+  --env production \
+  --since "1 hour ago"
+
+# Slow requests (over 2 seconds)
+reqsmith history \
+  --min-response-time 2000 \
+  --days 1
+
+# Large responses (over 1MB)
+reqsmith history \
+  --min-response-size 1048576 \
+  --limit 50
+```
+
+## Individual Request Details
+
+### Show Request Details
+
+Get detailed information about specific requests:
+
+```bash
+# Show request by ID
+reqsmith history show 12345
+
+# Show with full response body
+reqsmith history show 12345 --full
+
+# Show request and response headers
+reqsmith history show 12345 --headers
+
+# Show timing breakdown
+reqsmith history show 12345 --timing
+
+# Show in different formats
+reqsmith history show 12345 --format json
+reqsmith history show 12345 --format yaml
+```
+
+### Request Information
+
+Each history entry contains comprehensive information:
+
+- **Request ID**: Unique identifier for the request
+- **Timestamp**: When the request was made
+- **Method and URL**: HTTP method and complete URL
+- **Environment**: Environment active during request
+- **Template**: Template used (if any)
+- **Headers**: Request and response headers
+- **Body**: Request and response body content
+- **Status**: Response status code and reason
+- **Timing**: Request duration and timing breakdown
+- **Size**: Request and response content size
+- **Metadata**: Additional context and tags
+
+## Searching History
+
+### Text Search
+
+Search through request history content:
+
+```bash
+# Search in URLs
+reqsmith history search "github.com"
+
+# Search in response bodies
+reqsmith history search "error" --in-response
+
+# Search in request bodies
+reqsmith history search "username" --in-request
+
+# Search in headers
+reqsmith history search "application/json" --in-headers
+
+# Case-sensitive search
+reqsmith history search "GitHub" --case-sensitive
+```
+
+### Advanced Search
+
+Use pattern matching and advanced search:
+
+```bash
+# Regular expression search
+reqsmith history search "user/\d+" --regex
+
+# Search with multiple terms (AND)
+reqsmith history search "api users" --all-terms
+
+# Search with multiple terms (OR)
+reqsmith history search "api|users" --any-terms
+
+# Search excluding terms
+reqsmith history search "api" --exclude "test,debug"
+
+# Search with wildcards
+reqsmith history search "api.*.com" --wildcard
+```
+
+### Search Scopes
+
+Control where to search:
+
+```bash
+# Search only in URLs
+reqsmith history search "github" --scope url
+
+# Search only in response bodies
+reqsmith history search "error" --scope response-body
+
+# Search in specific fields
+reqsmith history search "Bearer" --scope headers
+
+# Search in metadata
+reqsmith history search "template" --scope metadata
+
+# Search across all fields (default)
+reqsmith history search "api" --scope all
+```
+
+## Replaying Requests
+
+### Basic Replay
+
+Re-execute previous requests:
+
+```bash
+# Retry specific request by ID
+reqsmith history retry 12345
+
+# Retry the last request
+reqsmith history retry --last
+
+# Retry the last failed request
+reqsmith history retry --last-failed
+
+# Retry last request from specific template
+reqsmith history retry --last-from-template github-api
+```
+
+### Batch Replay
+
+Replay multiple requests:
+
+```bash
+# Retry all failed requests
+reqsmith history retry --failed
+
+# Retry requests from last hour
+reqsmith history retry --since "1 hour ago"
+
+# Retry requests matching pattern
+reqsmith history retry --url-pattern "api.github.com"
+
+# Retry with filters
+reqsmith history retry \
+  --method GET \
+  --status 5xx \
+  --since "24 hours ago"
+```
+
+### Replay with Modifications
+
+Modify requests when replaying:
+
+```bash
+# Retry with different environment
+reqsmith history retry 12345 --env staging
+
+# Retry with additional headers
+reqsmith history retry 12345 \
+  --header "X-Debug: true" \
+  --header "X-Retry: attempt-2"
+
+# Retry with timeout override
+reqsmith history retry 12345 --timeout 60000
+
+# Retry with different base URL
+reqsmith history retry 12345 --base-url https://api-v2.example.com
+
+# Retry with variable overrides
+reqsmith history retry 12345 --var user_id=456
+```
+
+## History Analysis
+
+### Statistics
+
+Get insights from request history:
+
+```bash
+# General statistics
+reqsmith history stats
+
+# Statistics for specific time period
+reqsmith history stats --days 30
+
+# Statistics by HTTP method
+reqsmith history stats --by-method
+
+# Statistics by status code
+reqsmith history stats --by-status
+
+# Statistics by environment
+reqsmith history stats --by-environment
+
+# Statistics by template
+reqsmith history stats --by-template
+```
+
+### Performance Analysis
+
+Analyze request performance:
+
+```bash
+# Show slowest requests
+reqsmith history slowest
+
+# Show fastest requests
+reqsmith history fastest
+
+# Performance summary
+reqsmith history performance --summary
+
+# Response time trends
+reqsmith history trends --metric response-time --days 7
+
+# Size analysis
+reqsmith history analyze --by-size
+
+# Error rate analysis
+reqsmith history analyze --error-rate --by-hour
+```
+
+### Error Analysis
+
+Identify and analyze errors:
+
+```bash
+# Show all error responses
+reqsmith history errors
+
+# Group errors by status code
+reqsmith history errors --group-by status
+
+# Error patterns over time
+reqsmith history errors --trends --days 7
+
+# Most frequent errors
+reqsmith history errors --frequency
+
+# Error correlation analysis
+reqsmith history errors --correlate environment,template
+
+# Recent errors only
+reqsmith history errors --since "1 hour ago"
+```
+
+## History Export
+
+### Export Formats
+
+Export history in various formats:
+
+```bash
+# Export to JSON
+reqsmith history export history.json
+
+# Export to CSV for spreadsheet analysis
+reqsmith history export history.csv --format csv
+
+# Export to Excel with multiple sheets
+reqsmith history export history.xlsx --format excel
+
+# Export as HTTP Archive (HAR)
+reqsmith history export requests.har --format har
+
+# Export as Postman collection
+reqsmith history export collection.json --format postman
+```
+
+### Export Filters
+
+Export specific subsets of history:
+
+```bash
+# Export last 7 days
+reqsmith history export recent.json --days 7
+
+# Export failed requests only
+reqsmith history export failures.json --failed-only
+
+# Export specific environment
+reqsmith history export prod.json --env production
+
+# Export with custom fields
+reqsmith history export summary.csv \
+  --fields id,timestamp,method,url,status,response_time
+
+# Export with size limit
+reqsmith history export large.json --limit 1000
+```
+
+### Export Options
+
+Control export content and format:
+
+```bash
+# Include request/response bodies
+reqsmith history export full.json --include-bodies
+
+# Exclude sensitive headers
+reqsmith history export sanitized.json --sanitize
+
+# Compress large exports
+reqsmith history export large.json.gz --compress
+
+# Split into multiple files
+reqsmith history export batch --split-by date --split-size 1000
+
+# Export with metadata
+reqsmith history export detailed.json --include-metadata
+```
+
+## History Management
+
+### Cleanup Operations
+
+Manage history storage:
+
+```bash
+# Clear all history (with confirmation)
+reqsmith history clear
+
+# Clear old history (older than 30 days)
+reqsmith history clear --older-than 30
+
+# Clear by status code
+reqsmith history clear --status 2xx
+
+# Clear by environment
+reqsmith history clear --env development
+
+# Clear failed requests only
+reqsmith history clear --failed-only
+
+# Clear with size limit (keep last N requests)
+reqsmith history clear --keep-last 1000
+```
+
+### History Backup
+
+Backup and restore history:
+
+```bash
+# Backup all history
+reqsmith history backup history-backup.json
+
+# Backup with compression
+reqsmith history backup history-backup.json.gz --compress
+
+# Backup specific time range
+reqsmith history backup recent-backup.json --days 30
+
+# Restore from backup
+reqsmith history restore history-backup.json
+
+# Merge backup with existing history
+reqsmith history restore history-backup.json --merge
+
+# Validate backup file
+reqsmith history validate-backup history-backup.json
+```
+
+### History Configuration
+
+Configure history behavior:
+
+```bash
+# Enable/disable history tracking
+reqsmith config set history.enabled true
+
+# Set maximum history entries
+reqsmith config set history.max_entries 10000
+
+# Set auto-cleanup interval
+reqsmith config set history.cleanup_interval_days 30
+
+# Configure what to store
+reqsmith config set history.store_request_body true
+reqsmith config set history.store_response_body true
+reqsmith config set history.store_headers true
+
+# Set sensitive data exclusions
+reqsmith config set history.exclude_headers "Authorization,Cookie"
+reqsmith config set history.exclude_urls "*/auth/*,*/login"
+```
+
+## Advanced History Features
+
+### History Tags and Metadata
+
+Add metadata to requests:
+
+```bash
+# Add tags to request
+reqsmith history tag 12345 debugging,api-v2
+
+# Remove tags
+reqsmith history untag 12345 debugging
+
+# Search by tags
+reqsmith history --tags debugging
+reqsmith history --tags api-v2,production
+
+# Add custom metadata
+reqsmith history metadata 12345 \
+  --set ticket=JIRA-123 \
+  --set reviewer=john.doe
+
+# Show metadata
+reqsmith history show 12345 --metadata
+```
+
+### History Workflows
+
+Use history in automated workflows:
+
+```bash
+# Create template from successful request
+reqsmith history to-template 12345 --name new-endpoint
+
+# Extract variables from request
+reqsmith history extract-vars 12345 --output variables.json
+
+# Compare requests
+reqsmith history compare 12345 67890
+
+# Analyze request changes over time
+reqsmith history track-changes --url "api.example.com/users" --days 7
+
+# Create regression test from history
+reqsmith history to-test 12345 --output user-test.yaml
+```
+
+### History Hooks
+
+Automate history processing:
+
+```bash
+# Set up post-request hook
+reqsmith config set history.post_request_hook \
+  "reqsmith history notify --on-error"
+
+# Set up periodic analysis
+reqsmith config set history.analysis_hook \
+  "reqsmith history analyze --daily-report"
+
+# Custom processing script
+reqsmith config set history.custom_processor \
+  "python process_history.py"
+```
+
+## History Integration
+
+### CI/CD Integration
+
+Use history in continuous integration:
+
+```bash
+# Export for CI analysis
+reqsmith history export ci-data.json \
+  --env staging \
+  --since "last build" \
+  --format ci
+
+# Validate against baseline
+reqsmith history validate-baseline \
+  --baseline baseline.json \
+  --current-env staging
+
+# Generate performance report
+reqsmith history ci-report \
+  --format junit \
+  --output test-results.xml
+```
+
+### Monitoring Integration
+
+Integrate with monitoring systems:
+
+```bash
+# Send metrics to monitoring
+reqsmith history metrics --push-to prometheus
+
+# Generate alerts from history
+reqsmith history alert-check \
+  --error-threshold 5% \
+  --latency-threshold 2000ms
+
+# Export for log analysis
+reqsmith history export-logs \
+  --format structured \
+  --output app-logs.json
+```
+
+### Team Collaboration
+
+Share history data with team:
+
+```bash
+# Share anonymized history
+reqsmith history share --sanitize --team api-team
+
+# Create team report
+reqsmith history team-report \
+  --period weekly \
+  --output team-api-usage.html
+
+# Collaborative debugging
+reqsmith history debug-session \
+  --request 12345 \
+  --invite john.doe,jane.smith
+```
+
+## Command Reference
+
+### Core History Commands
+
+```bash
+# View history
+reqsmith history [list]              # List request history
+reqsmith history show ID             # Show specific request
+reqsmith history search TERM          # Search history
+
+# Replay requests
+reqsmith history retry ID             # Retry specific request
+reqsmith history retry --failed       # Retry failed requests
+reqsmith history retry --last         # Retry last request
+
+# Analysis
+reqsmith history stats               # Show statistics
+reqsmith history errors              # Show error analysis
+reqsmith history performance         # Performance analysis
+reqsmith history trends              # Show trends
+
+# Export and backup
+reqsmith history export FILE         # Export history
+reqsmith history backup FILE         # Backup history
+reqsmith history restore FILE        # Restore from backup
+
+# Management
+reqsmith history clear               # Clear history
+reqsmith history cleanup             # Cleanup old entries
+reqsmith history validate            # Validate history
+```
+
+### History Options
+
+```bash
+# Filtering options
+--limit N                       # Limit number of results
+--days N                        # Last N days
+--since DATE                    # Since specific date
+--method METHOD                 # Filter by HTTP method
+--status CODE                   # Filter by status code
+--url PATTERN                   # Filter by URL pattern
+--env ENVIRONMENT               # Filter by environment
+--template TEMPLATE             # Filter by template
+
+# Display options
+--details                       # Show detailed information
+--full                          # Include full bodies
+--headers                       # Show headers
+--timing                        # Show timing information
+--format FORMAT                 # Output format (json, yaml, table)
+
+# Search options
+--regex                         # Use regular expressions
+--case-sensitive                # Case-sensitive search
+--in-request                    # Search in request data
+--in-response                   # Search in response data
+--scope SCOPE                   # Search scope
+
+# Export options
+--include-bodies                # Include request/response bodies
+--sanitize                      # Remove sensitive data
+--compress                      # Compress output
+--split-by FIELD                # Split into multiple files
+
+# Replay options
+--env ENVIRONMENT               # Use different environment
+--header "Name: Value"          # Add custom header
+--timeout MS                    # Override timeout
+--var KEY=VALUE                 # Override variables
+```
+
+## Best Practices
+
+1. **Regular cleanup**: Remove old history entries to keep database performant
+2. **Use meaningful tags**: Tag important requests for easy retrieval
+3. **Analyze patterns**: Regular analysis helps identify issues and optimization opportunities
+4. **Backup important data**: Regular backups prevent data loss
+5. **Filter effectively**: Use specific filters to find requests quickly
+6. **Protect sensitive data**: Configure exclusions for sensitive information
+7. **Monitor trends**: Watch for performance degradation or error patterns
+8. **Share insights**: Use team reports for collaborative debugging
+9. **Automate analysis**: Set up automated reports and alerts
+10. **Validate exports**: Always validate exported data before sharing
+
+## Examples
+
+### Daily Workflow Example
+
+```bash
+# Check today's API usage
+reqsmith history --since "today" --stats
+
+# Review any errors
+reqsmith history errors --since "24 hours ago"
+
+# Analyze slow requests
+reqsmith history slowest --limit 10 --since "today"
+
+# Export daily report
+reqsmith history export daily-$(date +%Y%m%d).json \
+  --since "today" \
+  --include-metadata
+```
+
+### Debugging Workflow
+
+```bash
+# Find failing requests
+reqsmith history --status 5xx --limit 20
+
+# Analyze specific failure
+reqsmith history show 12345 --full --timing
+
+# Retry with debugging enabled
+reqsmith history retry 12345 \
+  --header "X-Debug: true" \
+  --env staging
+
+# Compare with successful similar request
+reqsmith history search "same-endpoint" --status 200
+reqsmith history compare 12345 67890
+```
+
+### Performance Analysis
+
+```bash
+# Weekly performance review
+reqsmith history performance --days 7 --summary
+
+# Identify trends
+reqsmith history trends \
+  --metric response-time \
+  --by-endpoint \
+  --days 30
+
+# Export for detailed analysis
+reqsmith history export performance-data.csv \
+  --fields timestamp,url,response_time,response_size \
+  --days 30 \
+  --format csv
+```
+
+## Next Steps
+
+- Learn about [Configuration Commands](/cli/config) for history settings
+- Explore [Template Commands](/cli/template) for converting history to templates
+- Check out [Request Commands](/cli/request) for creating new history entries
+- See [Environment Commands](/cli/env) for environment-specific history

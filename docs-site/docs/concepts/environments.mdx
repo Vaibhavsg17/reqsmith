@@ -1,0 +1,570 @@
+---
+title: Environment Management
+description: "Manage different configurations and variables with ReqSmith environments"
+---
+
+# Environment Management
+
+Environments in ReqSmith allow you to manage different sets of variables for different deployment stages (development, staging, production) or different API configurations.
+
+## What are Environments?
+
+An environment is a named collection of variables that can be used in:
+- Template URLs and request bodies
+- Headers and query parameters  
+- Any part of a request configuration
+
+Common use cases:
+- Different API base URLs for dev/staging/prod
+- Different authentication tokens per environment
+- Different configuration values per deployment
+
+## Creating Environments
+
+### Basic Environment Creation
+
+Create a new environment:
+
+```bash
+# Create environment with description
+reqsmith env create development --description "Development environment"
+
+# Create multiple environments
+reqsmith env create staging --description "Staging environment"
+reqsmith env create production --description "Production environment"
+```
+
+### Quick Setup
+
+Create and configure an environment in one go:
+
+```bash
+# Create and set variables
+reqsmith env create dev \
+  --set API_BASE_URL="http://localhost:3000/api" \
+  --set API_TOKEN="dev-token-123" \
+  --set DEBUG_MODE="true"
+```
+
+## Managing Variables
+
+### Set Variables
+
+Add variables to an environment:
+
+```bash
+# Switch to environment first
+reqsmith env switch development
+
+# Set individual variables
+reqsmith env set API_BASE_URL "https://api.dev.example.com"
+reqsmith env set API_TOKEN "dev-token-abc123"
+reqsmith env set DATABASE_URL "postgresql://localhost/myapp_dev"
+reqsmith env set DEBUG_MODE "true"
+reqsmith env set TIMEOUT_SECONDS "30"
+```
+
+### Get Variables
+
+Retrieve variable values:
+
+```bash
+# Get specific variable
+reqsmith env get API_BASE_URL
+
+# Get all variables in current environment
+reqsmith env vars
+
+# Get variables from specific environment
+reqsmith env vars --env production
+```
+
+### Remove Variables
+
+Delete variables from environment:
+
+```bash
+# Remove specific variable
+reqsmith env unset DEBUG_MODE
+
+# Remove multiple variables
+reqsmith env unset API_TOKEN DATABASE_URL
+```
+
+## Environment Operations
+
+### List Environments
+
+View all available environments:
+
+```bash
+# List all environments
+reqsmith env list
+
+# List with details
+reqsmith env list --details
+
+# Show current environment
+reqsmith env current
+```
+
+### Switch Environments
+
+Change the active environment:
+
+```bash
+# Switch to development
+reqsmith env switch development
+
+# Switch to production
+reqsmith env switch production
+
+# Switch back to no environment
+reqsmith env switch --none
+```
+
+### Copy Environments
+
+Duplicate an environment with its variables:
+
+```bash
+# Copy development to testing
+reqsmith env copy development testing
+
+# Copy with description
+reqsmith env copy development testing --description "Testing environment based on dev"
+```
+
+### Delete Environments
+
+Remove environments you no longer need:
+
+```bash
+# Delete specific environment
+reqsmith env delete old-environment
+
+# Delete multiple environments
+reqsmith env delete staging testing
+
+# Delete with confirmation prompt
+reqsmith env delete production --confirm
+```
+
+## Using Environments
+
+### With Templates
+
+Use environment variables in templates:
+
+```bash
+# Create template using environment variables
+reqsmith template save api-users \
+  --method GET \
+  --url "${API_BASE_URL}/users" \
+  --header "Authorization: Bearer ${API_TOKEN}" \
+  --param "debug=${DEBUG_MODE}"
+
+# Use template with current environment
+reqsmith template use api-users
+
+# Use template with specific environment
+reqsmith template use api-users --env production
+```
+
+### With Direct Requests
+
+Use environment variables in direct requests:
+
+```bash
+# Make request using current environment variables
+reqsmith request get "${API_BASE_URL}/health"
+
+# Make request with specific environment
+reqsmith request get "${API_BASE_URL}/users" --env staging
+```
+
+### Variable Resolution Order
+
+Variables are resolved in this order (highest to lowest priority):
+
+1. Command-line variables (`--var NAME=value`)
+2. Environment variables set in ReqSmith
+3. System environment variables
+4. Template default values
+
+```bash
+# Command-line variable overrides environment variable
+reqsmith template use api-endpoint \
+  --var API_BASE_URL="http://localhost:8080" \
+  --env production
+```
+
+## Environment Configuration Examples
+
+### Development Environment
+
+```bash
+reqsmith env create development
+reqsmith env switch development
+
+# Local development settings
+reqsmith env set API_BASE_URL "http://localhost:3000/api"
+reqsmith env set API_TOKEN "dev-token-123"
+reqsmith env set DATABASE_URL "postgresql://localhost/myapp_dev"
+reqsmith env set REDIS_URL "redis://localhost:6379"
+reqsmith env set DEBUG_MODE "true"
+reqsmith env set LOG_LEVEL "debug"
+reqsmith env set TIMEOUT_SECONDS "10"
+```
+
+### Staging Environment
+
+```bash
+reqsmith env create staging
+reqsmith env switch staging
+
+# Staging server settings
+reqsmith env set API_BASE_URL "https://api.staging.example.com"
+reqsmith env set API_TOKEN "staging-token-456"
+reqsmith env set DATABASE_URL "postgresql://staging-db.example.com/myapp"
+reqsmith env set REDIS_URL "redis://staging-redis.example.com:6379"
+reqsmith env set DEBUG_MODE "false"
+reqsmith env set LOG_LEVEL "info"
+reqsmith env set TIMEOUT_SECONDS "30"
+```
+
+### Production Environment
+
+```bash
+reqsmith env create production
+reqsmith env switch production
+
+# Production settings
+reqsmith env set API_BASE_URL "https://api.example.com"
+reqsmith env set API_TOKEN "prod-token-789"
+reqsmith env set DATABASE_URL "postgresql://prod-db.example.com/myapp"
+reqsmith env set REDIS_URL "redis://prod-redis.example.com:6379"
+reqsmith env set DEBUG_MODE "false"
+reqsmith env set LOG_LEVEL "error"
+reqsmith env set TIMEOUT_SECONDS "60"
+```
+
+## Environment Import/Export
+
+### Export Environments
+
+Share environments with your team:
+
+```bash
+# Export current environment
+reqsmith env export development.json
+
+# Export specific environment
+reqsmith env export staging.json --env staging
+
+# Export all environments
+reqsmith env export all-environments.json --all
+
+# Export in different formats
+reqsmith env export config.yaml --format yaml
+reqsmith env export config.env --format dotenv
+```
+
+### Import Environments
+
+Load environments from files:
+
+```bash
+# Import environment
+reqsmith env import development.json
+
+# Import with different name
+reqsmith env import staging.json --name "new-staging"
+
+# Import and merge with existing environment
+reqsmith env import updates.json --merge
+
+# Import from different formats
+reqsmith env import config.yaml --format yaml
+reqsmith env import .env --format dotenv
+```
+
+### Environment File Formats
+
+#### JSON Format
+```json
+{
+  "name": "development",
+  "description": "Development environment",
+  "variables": {
+    "API_BASE_URL": "http://localhost:3000/api",
+    "API_TOKEN": "dev-token-123",
+    "DEBUG_MODE": "true"
+  }
+}
+```
+
+#### YAML Format
+```yaml
+name: development
+description: Development environment
+variables:
+  API_BASE_URL: http://localhost:3000/api
+  API_TOKEN: dev-token-123
+  DEBUG_MODE: "true"
+```
+
+#### Dotenv Format
+```bash
+# Development environment
+API_BASE_URL=http://localhost:3000/api
+API_TOKEN=dev-token-123
+DEBUG_MODE=true
+```
+
+## Environment Statistics
+
+View usage statistics for environments:
+
+```bash
+# Show statistics for all environments
+reqsmith env stats
+
+# Show statistics for specific environment
+reqsmith env stats --env production
+
+# Show variable usage across environments
+reqsmith env stats --variables
+```
+
+## Advanced Environment Features
+
+### Environment Variables in Templates
+
+Use complex variable substitution:
+
+```bash
+# Template with nested variables
+reqsmith template save complex-api \
+  --method POST \
+  --url "${API_BASE_URL}/${API_VERSION}/users" \
+  --json '{
+    "user": {
+      "name": "${USER_NAME}",
+      "email": "${USER_EMAIL}",
+      "role": "${USER_ROLE:user}"
+    },
+    "metadata": {
+      "environment": "${ENVIRONMENT_NAME}",
+      "debug": ${DEBUG_MODE:false}
+    }
+  }' \
+  --header "Authorization: ${AUTH_TYPE:Bearer} ${API_TOKEN}" \
+  --header "X-Environment: ${ENVIRONMENT_NAME}"
+```
+
+### Conditional Configuration
+
+Use environment variables for conditional behavior:
+
+```bash
+# Development: short timeout, verbose output
+reqsmith env set TIMEOUT_SECONDS "5"
+reqsmith env set VERBOSE_OUTPUT "true"
+
+# Production: long timeout, minimal output  
+reqsmith env set TIMEOUT_SECONDS "60"
+reqsmith env set VERBOSE_OUTPUT "false"
+
+# Template that adapts based on environment
+reqsmith template save adaptive-request \
+  --method GET \
+  --url "${API_BASE_URL}/data" \
+  --timeout "${TIMEOUT_SECONDS}" \
+  --verbose "${VERBOSE_OUTPUT}"
+```
+
+### Environment Inheritance
+
+Create environment hierarchies:
+
+```bash
+# Base environment
+reqsmith env create base
+reqsmith env set API_VERSION "v1"
+reqsmith env set CONTENT_TYPE "application/json"
+
+# Development inherits from base
+reqsmith env create development --inherit base
+reqsmith env set API_BASE_URL "http://localhost:3000"
+reqsmith env set DEBUG_MODE "true"
+
+# Production inherits from base
+reqsmith env create production --inherit base
+reqsmith env set API_BASE_URL "https://api.example.com"
+reqsmith env set DEBUG_MODE "false"
+```
+
+## Security Considerations
+
+### Sensitive Variables
+
+Handle sensitive data carefully:
+
+```bash
+# Use environment variables for secrets
+export PROD_API_TOKEN="super-secret-token"
+
+# Reference in ReqSmith environment
+reqsmith env set API_TOKEN "${PROD_API_TOKEN}"
+
+# Or read from file
+reqsmith env set API_TOKEN "$(cat ~/.secrets/api-token)"
+```
+
+### Environment Isolation
+
+Keep environments separate:
+
+```bash
+# Don't mix production tokens in development
+reqsmith env switch development
+reqsmith env unset PROD_API_TOKEN
+
+# Use different variable names for clarity
+reqsmith env set DEV_API_TOKEN "dev-token"  # Development
+reqsmith env set PROD_API_TOKEN "prod-token"  # Production
+```
+
+## Environment Workflows
+
+### Multi-Environment Testing
+
+Test the same endpoint across environments:
+
+```bash
+# Create template
+reqsmith template save health-check \
+  --method GET \
+  --url "${API_BASE_URL}/health"
+
+# Test across all environments
+reqsmith template use health-check --env development
+reqsmith template use health-check --env staging  
+reqsmith template use health-check --env production
+```
+
+### Environment Promotion
+
+Promote configuration from dev to staging to production:
+
+```bash
+# Export development config
+reqsmith env export dev-config.json --env development
+
+# Import to staging and modify
+reqsmith env import dev-config.json --name staging
+reqsmith env switch staging
+reqsmith env set API_BASE_URL "https://api.staging.example.com"
+reqsmith env set API_TOKEN "staging-token"
+
+# Promote to production
+reqsmith env export staging-config.json --env staging
+reqsmith env import staging-config.json --name production
+reqsmith env switch production
+reqsmith env set API_BASE_URL "https://api.example.com"
+reqsmith env set API_TOKEN "production-token"
+```
+
+### Team Collaboration
+
+Share environments with team members:
+
+```bash
+# Export team configuration
+reqsmith env export team-dev.json --env development
+
+# Team member imports configuration
+reqsmith env import team-dev.json
+
+# Update with personal settings
+reqsmith env set API_TOKEN "personal-dev-token"
+reqsmith env set LOCAL_PORT "3001"
+```
+
+## Troubleshooting Environments
+
+### Common Issues
+
+1. **Variable not found**: Check environment is active and variable exists
+2. **Wrong environment**: Verify current environment with `reqsmith env current`
+3. **Variable not substituted**: Check variable syntax `${VAR_NAME}`
+4. **Permission errors**: Check if environment files are readable/writable
+
+### Debug Environment Usage
+
+```bash
+# Show current environment and variables
+reqsmith env current
+reqsmith env vars
+
+# Test variable substitution
+reqsmith template use my-template --dry-run
+
+# Show resolved values
+reqsmith template show my-template --resolve-variables
+```
+
+## Best Practices
+
+### 1. Use Descriptive Names
+```bash
+# Good
+reqsmith env create development-api-v2
+reqsmith env create staging-mobile-backend
+
+# Avoid
+reqsmith env create env1
+reqsmith env create test
+```
+
+### 2. Consistent Variable Naming
+```bash
+# Use consistent prefixes/patterns
+API_BASE_URL     # not BASE_URL or API_URL
+API_TOKEN        # not TOKEN or AUTH_TOKEN  
+DATABASE_URL     # not DB_URL or DATABASE_CONNECTION
+```
+
+### 3. Document Environments
+```bash
+reqsmith env create production \
+  --description "Production environment - use with caution"
+```
+
+### 4. Use Environment-Specific Prefixes
+```bash
+# Development
+reqsmith env set DEV_API_TOKEN "dev-token"
+reqsmith env set DEV_DATABASE_URL "localhost"
+
+# Production  
+reqsmith env set PROD_API_TOKEN "prod-token"
+reqsmith env set PROD_DATABASE_URL "prod-server"
+```
+
+### 5. Regular Cleanup
+```bash
+# Remove unused environments
+reqsmith env delete old-feature-branch
+
+# Check environment usage
+reqsmith env stats
+```
+
+## Next Steps
+
+- Learn about [Templates](/concepts/templates) to use environment variables
+- Explore [Request History](/concepts/history) to track environment usage
+- Check out [Configuration](/configuration) for global environment settings
+- See [Examples](/examples/api-testing-workflow) for complete workflows

@@ -1,0 +1,592 @@
+---
+title: Caching System
+description: "Understand ReqSmith's hybrid caching system for improved performance and offline capabilities"
+---
+
+# Caching System
+
+ReqSmith features a sophisticated hybrid caching system that combines in-memory and disk-based caching to provide fast response times, offline capabilities, and intelligent cache management.
+
+## What is Caching?
+
+Caching in ReqSmith stores API responses temporarily to:
+- **Improve performance**: Serve cached responses instantly
+- **Reduce API calls**: Avoid redundant requests to APIs
+- **Enable offline work**: Access previously fetched data without internet
+- **Save bandwidth**: Reduce data transfer for repeated requests
+- **Provide consistency**: Use same data across multiple operations
+
+## Cache Types
+
+### Memory Cache
+
+Fast, temporary storage in RAM:
+- **Purpose**: Immediate access to recent responses
+- **Lifetime**: Exists only during ReqSmith session
+- **Size**: Limited by available memory
+- **Speed**: Fastest access time (microseconds)
+- **Persistence**: Lost when ReqSmith exits
+
+### Disk Cache
+
+Persistent storage on disk:
+- **Purpose**: Long-term response storage
+- **Lifetime**: Persists across ReqSmith sessions
+- **Size**: Limited by available disk space
+- **Speed**: Fast access time (milliseconds)
+- **Persistence**: Maintained until manually cleared or expired
+
+### Hybrid Approach
+
+ReqSmith uses both cache types intelligently:
+1. **First check**: Memory cache for instant results
+2. **Second check**: Disk cache if not in memory
+3. **Cache promotion**: Move disk cache hits to memory
+4. **Smart eviction**: Remove old entries when limits reached
+
+## Cache Configuration
+
+### Enable/Disable Caching
+
+Control cache behavior:
+
+```bash
+# Enable caching (default)
+reqsmith config set cache.enabled true
+
+# Disable all caching
+reqsmith config set cache.enabled false
+
+# Enable only memory cache
+reqsmith config set cache.memory_enabled true
+reqsmith config set cache.disk_enabled false
+```
+
+### Cache Sizes
+
+Configure cache limits:
+
+```bash
+# Set memory cache size (MB)
+reqsmith config set cache.memory_size_mb 100
+
+# Set disk cache size (MB)
+reqsmith config set cache.disk_size_mb 500
+
+# Set maximum entries per cache
+reqsmith config set cache.max_memory_entries 1000
+reqsmith config set cache.max_disk_entries 5000
+```
+
+### Cache TTL (Time To Live)
+
+Set cache expiration times:
+
+```bash
+# Default TTL for all cached responses (seconds)
+reqsmith config set cache.default_ttl 3600
+
+# TTL by HTTP method
+reqsmith config set cache.get_ttl 7200      # 2 hours for GET
+reqsmith config set cache.post_ttl 300      # 5 minutes for POST
+reqsmith config set cache.put_ttl 600       # 10 minutes for PUT
+reqsmith config set cache.delete_ttl 60     # 1 minute for DELETE
+
+# TTL by status code
+reqsmith config set cache.success_ttl 3600  # 1 hour for 2xx responses
+reqsmith config set cache.error_ttl 300     # 5 minutes for error responses
+```
+
+## Cache Keys
+
+### How Cache Keys Work
+
+Cache keys uniquely identify requests:
+- **Method**: HTTP method (GET, POST, etc.)
+- **URL**: Complete URL including query parameters
+- **Headers**: Relevant headers (configurable)
+- **Body**: Request body content (for POST/PUT)
+- **Environment**: Active environment context
+
+### Key Components
+
+Default cache key format:
+```
+{method}:{url_hash}:{headers_hash}:{body_hash}:{env}
+```
+
+Example:
+```
+GET:a1b2c3d4:e5f6g7h8:i9j0k1l2:production
+```
+
+### Customizing Cache Keys
+
+Configure which elements affect cache keys:
+
+```bash
+# Include/exclude specific headers in cache key
+reqsmith config set cache.key_headers "Authorization,X-API-Key"
+
+# Ignore query parameters for cache key
+reqsmith config set cache.ignore_query_params "timestamp,nonce"
+
+# Include environment in cache key
+reqsmith config set cache.include_environment true
+
+# Include request body in cache key
+reqsmith config set cache.include_body true
+```
+
+## Using Cache
+
+### Automatic Caching
+
+By default, ReqSmith automatically caches responses:
+
+```bash
+# This request will be cached automatically
+reqsmith get https://api.github.com/users/octocat
+
+# Second identical request will use cache
+reqsmith get https://api.github.com/users/octocat
+```
+
+### Cache Control Headers
+
+ReqSmith respects HTTP cache control headers:
+
+```bash
+# Server's cache control is honored
+reqsmith get https://api.example.com/data
+# Response: Cache-Control: max-age=3600
+
+# Custom cache control override
+reqsmith get https://api.example.com/data --cache-ttl 7200
+```
+
+### Force Cache Behavior
+
+Control cache usage per request:
+
+```bash
+# Force cache refresh (ignore existing cache)
+reqsmith get https://api.github.com/users/octocat --no-cache
+
+# Use cache only (don't make network request if not cached)
+reqsmith get https://api.github.com/users/octocat --cache-only
+
+# Set custom TTL for this request
+reqsmith get https://api.github.com/users/octocat --cache-ttl 1800
+```
+
+## Cache Management
+
+### View Cache Status
+
+Check cache information:
+
+```bash
+# Show cache statistics
+reqsmith cache stats
+
+# Show cache entries
+reqsmith cache list
+
+# Show cache for specific URL pattern
+reqsmith cache list --url "api.github.com"
+
+# Show cache details
+reqsmith cache show <cache-key>
+```
+
+### Cache Statistics
+
+View cache performance:
+
+```bash
+# General cache statistics
+reqsmith cache stats
+
+# Memory cache statistics
+reqsmith cache stats --memory
+
+# Disk cache statistics  
+reqsmith cache stats --disk
+
+# Cache hit ratio over time
+reqsmith cache stats --history
+```
+
+### Clear Cache
+
+Remove cached data:
+
+```bash
+# Clear all cache
+reqsmith cache clear
+
+# Clear memory cache only
+reqsmith cache clear --memory
+
+# Clear disk cache only
+reqsmith cache clear --disk
+
+# Clear cache for specific URL pattern
+reqsmith cache clear --url "api.github.com"
+
+# Clear expired entries only
+reqsmith cache clear --expired
+
+# Clear cache older than specified time
+reqsmith cache clear --older-than "24h"
+```
+
+## Cache Strategies
+
+### Cache-First Strategy
+
+Try cache first, then network:
+
+```bash
+# Default behavior for GET requests
+reqsmith config set cache.strategy.get "cache-first"
+
+# Configuration per method
+reqsmith config set cache.strategy.post "network-first"
+```
+
+### Network-First Strategy
+
+Try network first, fallback to cache:
+
+```bash
+# Try network first, use cache on failure
+reqsmith config set cache.strategy.default "network-first"
+
+# Always try network for critical operations
+reqsmith config set cache.strategy.post "network-only"
+```
+
+### Cache-Only Strategy
+
+Use only cache, never network:
+
+```bash
+# Useful for offline testing
+reqsmith get https://api.github.com/users/octocat --cache-only
+```
+
+### Network-Only Strategy
+
+Always use network, never cache:
+
+```bash
+# Bypass cache completely
+reqsmith post https://api.example.com/data --no-cache
+```
+
+## Advanced Cache Features
+
+### Conditional Caching
+
+Cache based on response content:
+
+```bash
+# Only cache successful responses
+reqsmith config set cache.cache_success_only true
+
+# Cache specific status codes
+reqsmith config set cache.cacheable_status_codes "200,201,300,301,404"
+
+# Don't cache responses with specific headers
+reqsmith config set cache.exclude_headers "Set-Cookie,Authorization"
+```
+
+### Cache Validation
+
+Validate cached responses:
+
+```bash
+# Use ETags for validation
+reqsmith config set cache.use_etag true
+
+# Use Last-Modified for validation  
+reqsmith config set cache.use_last_modified true
+
+# Set validation interval
+reqsmith config set cache.validation_interval 3600
+```
+
+### Background Cache Updates
+
+Update cache in background:
+
+```bash
+# Enable background cache refresh
+reqsmith config set cache.background_refresh true
+
+# Refresh threshold (refresh when 80% of TTL passed)
+reqsmith config set cache.refresh_threshold 0.8
+
+# Maximum concurrent background refreshes
+reqsmith config set cache.max_background_refreshes 3
+```
+
+## Cache Storage
+
+### Storage Locations
+
+Cache is stored in platform-specific locations:
+
+**Windows:**
+```
+%USERPROFILE%\.reqsmith\cache\
+├── memory_cache.db    # Memory cache metadata
+├── disk_cache.db      # Disk cache index
+└── cache_data\        # Actual cached response files
+```
+
+**macOS/Linux:**
+```
+~/.reqsmith/cache/
+├── memory_cache.db    # Memory cache metadata  
+├── disk_cache.db      # Disk cache index
+└── cache_data/        # Actual cached response files
+```
+
+### Storage Format
+
+- **Index**: SQLite database for fast lookups
+- **Data**: Compressed response files
+- **Metadata**: Headers, timestamps, TTL information
+- **Encryption**: Optional encryption for sensitive responses
+
+### Storage Management
+
+Monitor and manage storage:
+
+```bash
+# Show storage usage
+reqsmith cache storage
+
+# Optimize storage (compact and cleanup)
+reqsmith cache optimize
+
+# Move cache location
+reqsmith config set cache.storage_path "/custom/cache/path"
+
+# Enable compression
+reqsmith config set cache.compress_data true
+```
+
+## Performance Optimization
+
+### Memory Management
+
+Optimize memory usage:
+
+```bash
+# Set memory limits
+reqsmith config set cache.memory_limit_mb 200
+
+# Configure eviction policy
+reqsmith config set cache.eviction_policy "lru"  # lru, lfu, fifo
+
+# Set cleanup interval
+reqsmith config set cache.cleanup_interval 300
+```
+
+### Disk Performance
+
+Optimize disk performance:
+
+```bash
+# Use faster storage location (SSD)
+reqsmith config set cache.storage_path "/fast/ssd/path"
+
+# Enable async disk operations
+reqsmith config set cache.async_disk_operations true
+
+# Set disk cache block size
+reqsmith config set cache.disk_block_size 4096
+```
+
+### Network Optimization
+
+Optimize network usage with cache:
+
+```bash
+# Enable cache warming
+reqsmith config set cache.warm_cache_on_startup true
+
+# Prefetch related resources
+reqsmith config set cache.prefetch_related true
+
+# Use compression for cached data
+reqsmith config set cache.compress_responses true
+```
+
+## Cache in Templates
+
+### Template Cache Control
+
+Control caching in templates:
+
+```yaml
+# template.yaml
+name: github-user
+description: Get GitHub user with cache control
+requests:
+  - name: get-user
+    method: GET
+    url: "https://api.github.com/users/{{username}}"
+    cache:
+      enabled: true
+      ttl: 3600
+      strategy: "cache-first"
+      key_includes: ["username"]
+```
+
+### Cache Variables
+
+Use cache information in templates:
+
+```yaml
+# Use cache timestamp in requests
+requests:
+  - name: conditional-request
+    method: GET
+    url: "https://api.example.com/data"
+    headers:
+      If-Modified-Since: "{{cache.last_modified}}"
+    cache:
+      conditional: true
+```
+
+## Debugging Cache
+
+### Cache Debug Mode
+
+Enable detailed cache logging:
+
+```bash
+# Enable cache debugging
+reqsmith config set cache.debug true
+
+# Set cache log level
+reqsmith config set cache.log_level "debug"
+
+# Log cache decisions
+reqsmith config set cache.log_decisions true
+```
+
+### Cache Inspection
+
+Inspect cache behavior:
+
+```bash
+# Show cache decision for request
+reqsmith get https://api.github.com/users/octocat --explain-cache
+
+# Validate cache integrity
+reqsmith cache validate
+
+# Show cache access patterns
+reqsmith cache patterns
+
+# Export cache for analysis
+reqsmith cache export cache-analysis.json
+```
+
+### Troubleshooting
+
+Common cache issues:
+
+1. **Cache not working**: Check if caching is enabled
+2. **Cache misses**: Verify cache key configuration
+3. **Stale data**: Check TTL settings and validation
+4. **Storage full**: Monitor disk space and cache size limits
+5. **Performance issues**: Optimize cache configuration
+
+## Security Considerations
+
+### Sensitive Data
+
+Protect sensitive information in cache:
+
+```bash
+# Don't cache responses with authentication
+reqsmith config set cache.exclude_auth_responses true
+
+# Exclude sensitive headers from cache
+reqsmith config set cache.exclude_headers "Authorization,Cookie,X-API-Key"
+
+# Encrypt cached data
+reqsmith config set cache.encrypt_cache true
+reqsmith config set cache.encryption_key_file "~/.reqsmith/cache.key"
+```
+
+### Access Control
+
+Control cache access:
+
+```bash
+# Set cache file permissions (Unix)
+reqsmith config set cache.file_permissions "600"
+
+# Disable cache sharing between users
+reqsmith config set cache.user_isolation true
+
+# Enable cache integrity checks
+reqsmith config set cache.verify_integrity true
+```
+
+## Best Practices
+
+1. **Set appropriate TTLs**: Balance freshness vs performance
+2. **Monitor cache hit ratio**: Aim for >70% hit ratio
+3. **Use cache validation**: Enable ETags and Last-Modified
+4. **Secure sensitive data**: Exclude authentication from cache
+5. **Regular cleanup**: Remove old and unused cache entries
+6. **Size management**: Monitor and limit cache sizes
+7. **Environment-specific**: Consider different TTLs per environment
+
+## Integration Examples
+
+### CI/CD Pipeline
+
+Use cache in continuous integration:
+
+```bash
+# Warm cache before tests
+reqsmith cache warm --templates test-templates
+
+# Run tests with cache
+reqsmith template run api-tests --cache-strategy cache-first
+
+# Clear cache after tests
+reqsmith cache clear --test-data
+```
+
+### Development Workflow
+
+Use cache for development:
+
+```bash
+# Load cache with common API responses
+reqsmith cache load development-cache.json
+
+# Work offline with cached responses
+reqsmith config set cache.strategy.default "cache-only"
+
+# Export cache for team sharing
+reqsmith cache export team-cache.json
+```
+
+## Next Steps
+
+- Learn about [Request History](/concepts/history) for tracking all requests
+- Explore [Templates](/concepts/templates) for cache-aware request automation
+- Check out [Configuration](/configuration) for detailed cache settings
+- See [Advanced Features](/advanced/troubleshooting) for cache debugging

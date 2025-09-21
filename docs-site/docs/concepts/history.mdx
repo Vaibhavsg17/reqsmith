@@ -1,0 +1,477 @@
+---
+title: Request History
+description: "Track, search, and replay your API request history with ReqSmith"
+---
+
+# Request History
+
+ReqSmith automatically tracks all your API requests, providing a comprehensive history that you can search, analyze, and replay. This feature is essential for debugging, testing, and understanding API usage patterns.
+
+## What is Request History?
+
+Request history is an automatic log of every HTTP request made through ReqSmith, including:
+- Request details (method, URL, headers, body)
+- Response information (status, headers, body, timing)
+- Execution context (template used, environment, timestamp)
+- Performance metrics (response time, data size)
+
+## Viewing History
+
+### List Recent Requests
+
+View your most recent requests:
+
+```bash
+# Show last 10 requests (default)
+reqsmith history list
+
+# Show specific number of requests
+reqsmith history list --limit 20
+
+# Show with detailed information
+reqsmith history list --details
+```
+
+### Filter History
+
+Filter requests by various criteria:
+
+```bash
+# Filter by HTTP method
+reqsmith history list --method GET
+reqsmith history list --method POST
+
+# Filter by status code
+reqsmith history list --status 200
+reqsmith history list --status 404
+
+# Filter by URL pattern
+reqsmith history list --url "api.github.com"
+reqsmith history list --url "*/users/*"
+
+# Filter by template used
+reqsmith history list --template github-user
+
+# Filter by environment
+reqsmith history list --env production
+
+# Filter by time period
+reqsmith history list --days 7
+reqsmith history list --since "2023-12-01"
+```
+
+### Combined Filters
+
+Combine multiple filters for precise results:
+
+```bash
+# GET requests to GitHub API in the last 3 days
+reqsmith history list \
+  --method GET \
+  --url "api.github.com" \
+  --days 3
+
+# Failed requests from production environment
+reqsmith history list \
+  --status 500 \
+  --env production \
+  --days 1
+```
+
+## Request Details
+
+### View Specific Request
+
+Get detailed information about a specific request:
+
+```bash
+# Show request by ID
+reqsmith history show 12345
+
+# Show with full response body
+reqsmith history show 12345 --full
+
+# Show request and response headers
+reqsmith history show 12345 --headers
+```
+
+### Request Information Includes
+
+Each history entry contains:
+- **Request ID**: Unique identifier
+- **Timestamp**: When the request was made
+- **Method and URL**: HTTP method and full URL
+- **Status Code**: Response status
+- **Response Time**: Request duration
+- **Content Size**: Response body size
+- **Template**: Template used (if any)
+- **Environment**: Environment active during request
+- **Headers**: Request and response headers
+- **Body**: Request and response body content
+
+## Searching History
+
+### Text Search
+
+Search through request history:
+
+```bash
+# Search in URLs
+reqsmith history search "github.com"
+
+# Search in response bodies
+reqsmith history search "error" --in-response
+
+# Search in request bodies
+reqsmith history search "username" --in-request
+
+# Case-sensitive search
+reqsmith history search "GitHub" --case-sensitive
+```
+
+### Advanced Search
+
+Use advanced search patterns:
+
+```bash
+# Regular expression search
+reqsmith history search "user/\d+" --regex
+
+# Search with multiple terms
+reqsmith history search "api" "users" --all-terms
+
+# Search excluding certain terms
+reqsmith history search "api" --exclude "test"
+```
+
+## Replaying Requests
+
+### Retry Previous Requests
+
+Re-execute previous requests:
+
+```bash
+# Retry a specific request by ID
+reqsmith history retry 12345
+
+# Retry the last request
+reqsmith history retry --last
+
+# Retry all failed requests
+reqsmith history retry --failed
+
+# Retry requests from last hour
+reqsmith history retry --since "1 hour ago"
+```
+
+### Retry with Modifications
+
+Modify requests when retrying:
+
+```bash
+# Retry with different environment
+reqsmith history retry 12345 --env staging
+
+# Retry with additional headers
+reqsmith history retry 12345 --header "X-Debug: true"
+
+# Retry with timeout override
+reqsmith history retry 12345 --timeout 60
+```
+
+## History Statistics
+
+### View Statistics
+
+Get insights from your request history:
+
+```bash
+# General statistics
+reqsmith history stats
+
+# Statistics for specific time period
+reqsmith history stats --days 30
+
+# Statistics by HTTP method
+reqsmith history stats --by-method
+
+# Statistics by status code
+reqsmith history stats --by-status
+
+# Statistics by environment
+reqsmith history stats --by-environment
+```
+
+### Statistics Include
+
+- **Total requests**: Number of requests made
+- **Success rate**: Percentage of successful requests (2xx status)
+- **Average response time**: Mean response time
+- **Most used endpoints**: Frequently requested URLs
+- **Error patterns**: Common error status codes
+- **Template usage**: Most used templates
+- **Environment distribution**: Requests per environment
+
+## History Analysis
+
+### Performance Analysis
+
+Analyze request performance:
+
+```bash
+# Show slowest requests
+reqsmith history analyze --slowest
+
+# Show requests by response time
+reqsmith history analyze --by-time
+
+# Show largest responses
+reqsmith history analyze --by-size
+
+# Performance trends over time
+reqsmith history analyze --trends --days 7
+```
+
+### Error Analysis
+
+Identify and analyze errors:
+
+```bash
+# Show all error responses
+reqsmith history analyze --errors
+
+# Group errors by status code
+reqsmith history analyze --errors --group-by status
+
+# Show error patterns
+reqsmith history analyze --error-patterns
+
+# Recent errors only
+reqsmith history analyze --errors --days 1
+```
+
+## Export History
+
+### Export to Files
+
+Export history for analysis or backup:
+
+```bash
+# Export all history to JSON
+reqsmith history export history.json
+
+# Export with filters
+reqsmith history export recent.json --days 7
+
+# Export specific fields only
+reqsmith history export summary.json --fields url,status,response_time
+
+# Export in different formats
+reqsmith history export history.csv --format csv
+reqsmith history export history.xlsx --format excel
+```
+
+### Export Formats
+
+Supported export formats:
+- **JSON**: Complete data structure
+- **CSV**: Tabular format for spreadsheet analysis
+- **Excel**: XLSX format with multiple sheets
+- **HAR**: HTTP Archive format for browser tools
+- **Postman**: Postman collection format
+
+## History Management
+
+### Clear History
+
+Manage history storage:
+
+```bash
+# Clear all history (with confirmation)
+reqsmith history clear
+
+# Clear old history (older than 30 days)
+reqsmith history clear --older-than 30
+
+# Clear failed requests only
+reqsmith history clear --failed-only
+
+# Clear by environment
+reqsmith history clear --env development
+```
+
+### History Configuration
+
+Configure history behavior:
+
+```bash
+# Set maximum history entries
+reqsmith config set storage.max_history_entries 5000
+
+# Enable/disable history tracking
+reqsmith config set history.enabled true
+
+# Set auto-cleanup interval
+reqsmith config set history.cleanup_interval_days 30
+
+# Configure what to store
+reqsmith config set history.store_request_body true
+reqsmith config set history.store_response_body true
+```
+
+## History Storage
+
+### Storage Location
+
+History is stored in:
+- **Windows**: `%USERPROFILE%\.reqsmith\history\`
+- **macOS/Linux**: `~/.reqsmith/history/`
+
+### Storage Format
+
+- **SQLite database**: Efficient storage and querying
+- **Indexed fields**: Fast searching and filtering
+- **Compression**: Response bodies compressed to save space
+- **Encryption**: Optional encryption for sensitive data
+
+### Backup and Restore
+
+```bash
+# Backup history database
+reqsmith history backup history-backup.db
+
+# Restore from backup
+reqsmith history restore history-backup.db
+
+# Migrate history from old version
+reqsmith history migrate old-history.json
+```
+
+## Integration with Other Features
+
+### Template Creation from History
+
+Create templates from successful requests:
+
+```bash
+# Create template from history entry
+reqsmith history to-template 12345 "github-user-template"
+
+# Create template with variable extraction
+reqsmith history to-template 12345 "api-endpoint" --extract-vars
+```
+
+### Environment Variables from History
+
+Extract variables from successful requests:
+
+```bash
+# Extract common URLs as variables
+reqsmith history extract-vars --urls
+
+# Extract headers as environment variables
+reqsmith history extract-vars --headers --env development
+```
+
+## Advanced History Features
+
+### History Hooks
+
+Automatically process requests:
+
+```bash
+# Run command after each request
+reqsmith config set history.post_request_hook "notify-send 'Request completed'"
+
+# Log specific events
+reqsmith config set history.error_hook "logger 'ReqSmith error: ${STATUS}'"
+```
+
+### History Patterns
+
+Identify usage patterns:
+
+```bash
+# Find common request sequences
+reqsmith history patterns --sequences
+
+# Identify API usage patterns
+reqsmith history patterns --endpoints
+
+# Find time-based patterns
+reqsmith history patterns --time-based
+```
+
+## Troubleshooting History
+
+### Common Issues
+
+1. **History not updating**: Check if history is enabled in configuration
+2. **Search not working**: Verify search terms and filters
+3. **Large history file**: Use cleanup commands to remove old entries
+4. **Missing requests**: Check if requests failed before being recorded
+
+### Debug History
+
+```bash
+# Check history status
+reqsmith history status
+
+# Validate history database
+reqsmith history validate
+
+# Repair corrupted history
+reqsmith history repair
+
+# Show history configuration
+reqsmith config show --section history
+```
+
+## Privacy and Security
+
+### Sensitive Data
+
+Protect sensitive information in history:
+
+```bash
+# Exclude sensitive headers from history
+reqsmith config set history.exclude_headers "Authorization,X-API-Key"
+
+# Don't store request/response bodies
+reqsmith config set history.store_request_body false
+reqsmith config set history.store_response_body false
+
+# Enable encryption for stored data
+reqsmith config set history.encrypt_data true
+```
+
+### Data Retention
+
+Control how long data is kept:
+
+```bash
+# Set retention period
+reqsmith config set history.retention_days 90
+
+# Auto-delete old entries
+reqsmith config set history.auto_cleanup true
+
+# Exclude certain URLs from history
+reqsmith config set history.exclude_urls "*/auth/*,*/login"
+```
+
+## Best Practices
+
+1. **Regular cleanup**: Remove old history entries to keep database performant
+2. **Use filters**: Use specific filters to find requests quickly
+3. **Export important data**: Backup history before major changes
+4. **Monitor patterns**: Use statistics to understand API usage
+5. **Protect sensitive data**: Configure exclusions for sensitive information
+6. **Use retry wisely**: Replay requests to test fixes and changes
+
+## Next Steps
+
+- Learn about [Templates](/concepts/templates) to save successful requests
+- Explore [Environment Management](/concepts/environments) for request context
+- Check out [Examples](/examples/api-testing-workflow) for complete workflows
+- Set up [Configuration](/configuration) for history preferences
