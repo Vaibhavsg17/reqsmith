@@ -400,7 +400,7 @@ Design templates for GraphQL workflows:
 
 ```yaml
 # github-graphql-template.yaml
-name: github-graphql-api
+name: github-graphql
 description: GitHub GraphQL API operations
 type: graphql
 
@@ -440,16 +440,16 @@ Execute GraphQL templates:
 
 ```bash
 # Run specific operation
-reqsmith template run github-graphql-api get-user \
+reqsmith template run github-graphql get-user \
   --var username=octocat
 
 # Run with environment
-reqsmith template run github-graphql-api search-repositories \
+reqsmith template run github-graphql search-repositories \
   --env production \
   --var search_term="machine learning"
 
 # Run all operations
-reqsmith template run github-graphql-api \
+reqsmith template run github-graphql \
   --var username=octocat \
   --var search_term="api"
 ```
@@ -831,5 +831,5 @@ reqsmith graphql introspect https://api.example.com/graphql --test-only
 
 - Learn about [Authentication](/advanced/authentication) for GraphQL endpoints
 - Explore [Batch Requests](/advanced/batch-requests) for GraphQL operations
-- Check out [Examples](/examples/graphql-api) for GraphQL workflows
+- Check out [Examples](/examples/advanced-scenarios) for GraphQL workflows
 - See [Configuration](/configuration) for GraphQL settings
