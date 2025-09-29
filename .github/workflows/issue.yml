@@ -6,6 +6,11 @@ on:
   issue_comment:
     types: [created]
 
+permissions:
+  issues: write   # allow creating comments and assigning issues
+  pull-requests: write
+  contents: read
+
 jobs:
   issue_bot:
     runs-on: ubuntu-latest
