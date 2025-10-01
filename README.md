@@ -1,98 +1,90 @@
 # ReqSmith
 
-A powerful command-line API testing tool with hybrid caching and optional AI assistance.
 
-## Features
+⚡ **ReqSmith** is a powerful, cross-platform command-line tool designed to make API testing faster, smarter, and more efficient. Whether you’re working with REST, GraphQL, or complex workflows, ReqSmith simplifies the process of sending requests, analyzing responses, and managing test scenarios — all from your terminal.
 
-- **HTTP/REST API Testing**: Support for GET, POST, PUT, PATCH, DELETE, OPTIONS methods
-- **GraphQL Support**: Native GraphQL query and mutation testing
-- **Hybrid Caching**: Memory + disk-based caching for improved performance
-- **Template Management**: Save and reuse request templates
-- **Environment Variables**: Manage different environments (dev, staging, prod)
-- **Request History**: Track and replay previous requests
-- **Rich Output**: Color-coded responses with JSON/XML formatting
-- **AI Assistance**: Optional Gemini AI integration for request validation and suggestions
-- **Cross-Platform**: Works on Windows, macOS, and Linux
+Unlike traditional **CLI-based** API clients, ReqSmith comes with hybrid caching (in-memory + disk) for blazing-fast repeated requests, template and environment management for reusable workflows, and a rich output system that highlights and formats responses for maximum readability.
 
-## Requirements
+✨ A. Features
+----------
 
-- Python 3.9 or higher
-- Network connectivity for API testing
+*   🔗 **HTTP/REST API Testing** – Supports `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and `OPTIONS` methods
+*   🧩 **GraphQL Support** – Easily run GraphQL queries and mutations
+*   ⚡ **Hybrid Caching** – Memory + disk-based caching for optimal speed and persistence
+*   📝 **Template Management** – Save, manage, and reuse request templates
+*   🌍 **Environment Variables** – Seamlessly switch between dev, staging, and prod environments
+*   ⏳ **Request History** – Track, review, and replay past requests
+*   🎨 **Rich Output** – Color-coded responses with pretty-printed `JSON/XML` formatting
+*   🤖 **AI Assistance (optional)** – Google Gemini-powered features for validation, suggestions, and analysis
+*   🖥️ **Cross-Platform** – Works on **Windows**, **macOS**, and **Linux**
+    
 
-## Installation
+📦 B. Requirements
+---------------
 
-```bash
+*   Python **3.9 or higher**
+*   Network connectivity for API testing
+*   (Optional) [**Gemini API Key**](https://aistudio.google.com/app/api-keys) for AI features
+    
+
+🚀 C. Installation
+---------------
+```   
 pip install reqsmith
 ```
 
-## Quick Start
 
-```bash
-# Simple GET request
-reqsmith get https://api.example.com/users
+⚙️ D. Configuration
+----------------
 
-# POST request with JSON body
-reqsmith post https://api.example.com/users -d '{"name": "John", "email": "john@example.com"}'
+Customizable options include:
 
-# Save request as template
-reqsmith save-template user-create --method POST --url https://api.example.com/users -d '{"name": "{{name}}", "email": "{{email}}"}'
+*   **Storage**: cache size, cache location
+*   **Network**: timeouts, retries, proxy settings
+*   **Output**: `JSON/XML` formatting preferences, color options
+*   **AI**: `Gemini API key` and toggle for AI-powered features
+    
 
-# Use template with variables
-reqsmith use-template user-create --var name="Jane" --var email="jane@example.com"
-```
+🤖 E. AI Assistance
+----------------
 
-## Configuration
-
-ReqSmith stores configuration in `~/.reqsmith/config.json`. You can customize:
-
-- Storage settings (cache sizes, paths)
-- Network settings (timeouts, retries)
-- Output formatting preferences
-- AI features (Gemini API key)
-
-## AI Features
-
-ReqSmith includes powerful AI assistance using Google's Gemini API for enhanced API testing.
+ReqSmith integrates with **Google’s Gemini API** for smarter API testing.
 
 ### Setup AI Features
 
-1. **Get a Gemini API Key:**
-   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Sign in with your Google account
-   - Create a new API key
+1.  **Get a Gemini API Key:**
+    
+    *   Visit [**Google AI Studio**](https://aistudio.google.com/app/api-keys)
+    *   Sign in with your Google account
+    *   Generate a new API key
+        
+**Option A: Using ReqSmith config (recommended)** 
+```
+# Run the interactive setup
+python scripts/setup_ai.py
 
-2. **Configure the API Key:**
-
-   **Option A: Using ReqSmith configuration (recommended)**
-   ```bash
-   # Run the interactive setup
-   python dev_scripts/setup_ai.py
-   
-   # Or configure directly
-   reqsmith config set ai.gemini_api_key "your-api-key-here"
-   ```
-
-   **Option B: Environment variable**
-   ```bash
-   export GEMINI_API_KEY="your-api-key-here"
-   ```
-
-3. **Test AI Integration:**
-   ```bash
-   python dev_scripts/test_ai_integration.py
-   ```
+# Or configure directly
+reqsmith config set ai.gemini_api_key "your-api-key-here"
+```
+**Option B: Using environment variable export** 
+```
+GEMINI_API_KEY="your-api-key-here"
+```
+    
+    
 
 ### AI Capabilities
 
-- **Smart Header Suggestions**: Get appropriate headers for API endpoints
-- **JSON Validation**: Intelligent validation with detailed explanations
-- **Status Code Explanations**: Natural language explanations of HTTP status codes
-- **Test Scenario Generation**: AI-generated test scenarios for endpoints
-- **API Analysis**: Intelligent analysis of API endpoints and patterns
+*   🔑 **Smart Header Suggestions** – Automatically suggest headers for APIs
+*   ✅ **JSON Validation** – Validate and debug JSON with detailed explanations
+*   📖 **Status Code Explanations** – Human-friendly descriptions of HTTP errors
+*   🧪 **Test Scenario Generation** – Generate test cases for your endpoints
+*   🔍 **API Analysis** – Detect patterns and provide optimization suggestions
+    
 
-### Usage Examples
+### AI Usage Examples
 
-```bash
+```
 # Get AI-suggested headers
 reqsmith request get https://api.github.com/user --ai-headers
 
@@ -106,20 +98,34 @@ reqsmith explain-status 404
 reqsmith analyze https://api.example.com/users --generate-tests
 ```
 
-## Development
+🛠️ F. Development
+---------------
 
-```bash
-# Clone the repository
-git clone https://github.com/VesperAkshay/reqsmith.git
-cd reqsmith
+Clone and install in development mode:
+```
+git clone https://github.com/VesperAkshay/reqsmith.git  
+cd reqsmith  
+```
+```
+pip install -e .   `
+```
 
-# Install in development mode
-pip install -e .
-
-# Run tests
+Run unit tests:
+```
 pytest
 ```
 
-## License
 
-MIT License - see LICENSE file for details.
+🗺️ G. Roadmap
+-----------
+
+*   Support for WebSocket testing
+*   AI-assisted contract testing
+*   Enhanced CLI autocomplete
+*   Plugin system for custom integrations
+    
+
+📄 License
+----------
+
+This project is licensed under the **MIT License** – see the LICENSE file for details.
