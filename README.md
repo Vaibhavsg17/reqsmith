@@ -17,7 +17,11 @@ Unlike traditional **CLI-based** API clients, ReqSmith comes with hybrid caching
 *   🎨 **Rich Output** – Color-coded responses with pretty-printed `JSON/XML` formatting
 *   🤖 **AI Assistance (optional)** – Google Gemini-powered features for validation, suggestions, and analysis
 *   🖥️ **Cross-Platform** – Works on **Windows**, **macOS**, and **Linux**
-    
+
+
+
+<img width="1879" height="954" alt="image" src="https://github.com/user-attachments/assets/ea8041b5-eabe-4159-b263-edcbdda6dafc" />
+
 
 📦 B. Requirements
 ---------------
