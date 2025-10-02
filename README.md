@@ -72,7 +72,7 @@ reqsmith config set ai.gemini_api_key "your-api-key-here"
 ```
 **Option B: Using environment variable export** 
 ```
-GEMINI_API_KEY="your-api-key-here"
+export GEMINI_API_KEY="your-api-key-here"
 ```
     
     
