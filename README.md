@@ -111,7 +111,7 @@ git clone https://github.com/VesperAkshay/reqsmith.git
 cd reqsmith  
 ```
 ```
-pip install -e .   `
+pip install -e .
 ```
 
 Run unit tests:
